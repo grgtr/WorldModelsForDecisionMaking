@@ -1,0 +1,44 @@
+# ============================================================
+# Explicit Agent (DreamerV3 / RSSM) Configuration
+# ============================================================
+
+# ----- RSSM Architecture -----
+# Stochastic latent: 8 categories × 8 bins = 64-dim
+dyn_stoch: 8
+dyn_discrete: 8
+# GRU hidden
+dyn_deter: 256
+dyn_hidden: 256
+# Unimix: 1% uniform to all Categorical probs (prevents KL collapse)
+unimix_ratio: 0.01
+
+# ----- Encoder -----
+encoder_mlp_layers: 2
+encoder_mlp_units: 256
+
+# ----- KL Loss -----
+kl_free: 1.0           # free bits threshold (nats)
+dyn_scale: 0.5         # weight on dynamics KL (prior → posterior)
+rep_scale: 0.1         # weight on representation KL (posterior → prior)
+
+# ----- Behavior (Actor-Critic) -----
+imag_horizon: 10       # imagination rollout length
+discount: 0.997
+discount_lambda: 0.95  # TD-lambda for lambda-return
+actor_entropy: 3.0e-4  # entropy bonus coefficient
+actor_min_std: 0.1
+actor_max_std: 1.0
+slow_target_fraction: 0.02  # EMA fraction for slow critic target
+
+# ----- Optimisers -----
+model_lr: 1.0e-4
+actor_lr: 3.0e-5
+critic_lr: 3.0e-5
+opt_eps: 1.0e-8
+grad_clip: 1000.0      # gradient clipping norm
+
+# ----- Training Loop -----
+batch_size: 16         # number of sequences per batch
+batch_length: 64       # time steps per sequence
+train_ratio: 512       # env steps between each world model update
+pretrain: 100          # world model updates before behavior training starts

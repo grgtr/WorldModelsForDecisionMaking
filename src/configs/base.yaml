@@ -1,0 +1,28 @@
+# ============================================================
+# Base configuration — shared by both agents
+# ============================================================
+
+# Reproducibility
+seed: 0
+
+# Hardware
+device: cuda
+mixed_precision: true
+
+# Training schedule
+total_steps: 500_000
+prefill_steps: 1_000        # random exploration before any learning
+eval_every: 10_000          # evaluate every N env steps
+eval_episodes: 10           # episodes per evaluation
+checkpoint_every: 50_000    # save checkpoint every N env steps
+log_every: 1_000            # log metrics every N env steps
+
+# Replay buffer
+buffer_capacity: 200_000
+
+# Environment (overridden by CLI)
+env: dmc_cartpole_swingup
+action_repeat: 2            # default for DMControl
+
+# Output
+logdir: logs

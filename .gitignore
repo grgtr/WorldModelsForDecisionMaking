@@ -1,0 +1,8 @@
+data/*
+data
+dreamerv3-torch/*
+dreamerv3-torch
+tdmpc2/*
+tdmpc2
+__pycache__/
+seed_000/

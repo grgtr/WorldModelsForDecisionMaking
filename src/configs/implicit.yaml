@@ -1,0 +1,54 @@
+# ============================================================
+# Implicit Agent (TD-MPC2) Configuration
+# ============================================================
+
+# ----- Architecture -----
+latent_dim: 64         # encoder output dimension
+mlp_dim: 256           # hidden layer width
+enc_dim: 64            # encoder hidden layer width
+num_enc_layers: 2      # encoder hidden layers (2 → 2+1=3 total with output)
+simnorm_dim: 8         # SimNorm group size (64/8 = 8 simplices)
+num_q: 2               # Q-function ensemble size (2 for single-task)
+dropout: 0.01          # dropout on Q first layer
+
+# ----- Two-hot regression bins -----
+num_bins: 101
+vmin: -10.0
+vmax: 10.0
+
+# ----- Loss weights -----
+consistency_coef: 20.0  # dynamics consistency (largest weight)
+reward_coef: 0.1
+value_coef: 0.1
+rho: 0.5               # geometric decay across horizon steps
+
+# ----- Optimisers -----
+lr: 3.0e-4
+enc_lr_scale: 0.3      # encoder LR = lr × enc_lr_scale
+grad_clip_norm: 20.0
+tau: 0.01              # Polyak update rate for target Q-networks
+entropy_coef: 1.0e-4
+
+# ----- Policy prior -----
+log_std_min: -10.0
+log_std_max: 2.0
+
+# ----- MPPI Planning -----
+mpc: true
+horizon: 5             # planning horizon (H ≤ 30 constraint)
+mppi_iterations: 4     # CEM refinement iterations
+num_samples: 256       # action sequences sampled per MPPI step
+num_elites: 32         # elite trajectories to refit distribution
+num_pi_trajs: 16       # trajectories from learned policy prior
+min_std: 0.05
+max_std: 2.0
+temperature: 0.5       # softmax temperature for elite weighting
+
+# ----- Discount -----
+discount_denom: 5
+discount_min: 0.95
+discount_max: 0.995
+
+# ----- Training Loop -----
+batch_size: 256        # transitions per update
+seed_steps: 1000       # random exploration before learning starts
