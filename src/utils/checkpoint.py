@@ -89,11 +89,31 @@ class CheckpointManager:
         return int(m.group(1)) if m else 0
 
     def _prune(self):
-        """Delete old checkpoints, keeping only the `keep` most recent."""
+        """Keep `keep` checkpoints spread evenly across training steps.
+
+        Rather than discarding the oldest checkpoints (which removes early
+        snapshots needed for temporal evolution analysis), we select `keep`
+        files whose steps are as evenly spaced as possible from first to last,
+        always retaining the most recent checkpoint.
+        """
         pattern = os.path.join(self._ckpt_dir, 'checkpoint_*.pt')
         files = sorted(glob.glob(pattern), key=self._step_from_path)
-        for f in files[:-self.keep]:
-            try:
-                os.remove(f)
-            except OSError:
-                pass
+        if len(files) <= self.keep:
+            return
+
+        # Choose keep indices spaced evenly from 0 to len-1, always include last
+        if self.keep == 1:
+            keep_indices = {len(files) - 1}
+        else:
+            keep_indices = {
+                round(i * (len(files) - 1) / (self.keep - 1))
+                for i in range(self.keep)
+            }
+            keep_indices.add(len(files) - 1)  # always keep newest
+
+        for i, f in enumerate(files):
+            if i not in keep_indices:
+                try:
+                    os.remove(f)
+                except OSError:
+                    pass

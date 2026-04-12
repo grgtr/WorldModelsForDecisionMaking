@@ -10,11 +10,11 @@ device: cuda
 mixed_precision: true
 
 # Training schedule
-total_steps: 500_000
+total_steps: 200_000
 prefill_steps: 1_000        # random exploration before any learning
 eval_every: 10_000          # evaluate every N env steps
 eval_episodes: 10           # episodes per evaluation
-checkpoint_every: 50_000    # save checkpoint every N env steps
+checkpoint_every: 10_000    # save checkpoint every N env steps
 log_every: 1_000            # log metrics every N env steps
 
 # Replay buffer

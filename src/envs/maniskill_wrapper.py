@@ -12,14 +12,14 @@ import numpy as np
 
 MANISKILL_AVAILABLE = False
 try:
-    import mani_skill.envs  # noqa: F401
+    import mani_skill2.envs  # noqa: F401
     MANISKILL_AVAILABLE = True
-    _MS_MODULE = 'mani_skill'
+    _MS_MODULE = 'mani_skill2'
 except ImportError:
     try:
-        import mani_skill2.envs  # noqa: F401
+        import mani_skill.envs  # noqa: F401
         MANISKILL_AVAILABLE = True
-        _MS_MODULE = 'mani_skill2'
+        _MS_MODULE = 'mani_skill'
     except ImportError:
         pass
 
@@ -49,8 +49,8 @@ class ManiSkillEnv:
         self._action_repeat = action_repeat
         self._seed = seed
 
-        env_kwargs = dict(obs_mode=obs_mode, render_mode=None)
-        if 'Cube' in env_id or 'Pick' in env_id or 'Push' in env_id or 'Stack' in env_id:
+        env_kwargs = dict(obs_mode=obs_mode, render_mode=None, reward_mode='dense')
+        if 'Cube' in env_id or 'Pick' in env_id or 'Push' in env_id or 'Stack' in env_id or 'Lift' in env_id:
             env_kwargs['control_mode'] = control_mode
 
         self._env = gym.make(env_id, **env_kwargs)

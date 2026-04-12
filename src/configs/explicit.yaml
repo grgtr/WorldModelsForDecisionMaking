@@ -40,5 +40,5 @@ grad_clip: 1000.0      # gradient clipping norm
 # ----- Training Loop -----
 batch_size: 16         # number of sequences per batch
 batch_length: 64       # time steps per sequence
-train_ratio: 512       # env steps between each world model update
+train_ratio: 64        # env steps between each world model update
 pretrain: 100          # world model updates before behavior training starts

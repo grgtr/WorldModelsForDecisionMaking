@@ -119,12 +119,8 @@ def make_agent(agent_type: str, obs_dim: int, act_dim: int,
 # Evaluation
 # ---------------------------------------------------------------------------
 
-def evaluate(agent, env_id: int, config, n_episodes: int,
-             action_repeat: int) -> dict:
+def evaluate(agent, eval_env, n_episodes: int) -> dict:
     """Run deterministic evaluation episodes and return metrics."""
-    from src.envs.factory import make_env
-    eval_env = make_env(env_id, seed=config.seed + 999,
-                        action_repeat=action_repeat)
     returns = []
     lengths = []
     for ep in range(n_episodes):
@@ -140,7 +136,6 @@ def evaluate(agent, env_id: int, config, n_episodes: int,
             ep_len += 1
         returns.append(ep_return)
         lengths.append(ep_len)
-    eval_env.close()
     return {
         'eval/mean_return': float(np.mean(returns)),
         'eval/std_return': float(np.std(returns)),
@@ -201,9 +196,10 @@ def main():
     print(f'[train] Agent: {args.agent}  Env: {config.env}  Seed: {config.seed}')
     print(f'[train] Logdir: {logdir}')
 
-    # Environment
+    # Environments (eval env created once and reused — avoid per-eval construction cost)
     action_repeat = getattr(config, 'action_repeat', 2)
     env = make_env(config.env, seed=config.seed, action_repeat=action_repeat)
+    eval_env = make_env(config.env, seed=config.seed + 999, action_repeat=action_repeat)
     print(f'[train] obs_dim={env.obs_dim}  act_dim={env.act_dim}  '
           f'continuous={env.act_continuous}')
 
@@ -332,9 +328,10 @@ def main():
                     metrics_accum[k] = metrics_accum.get(k, 0) * 0.9 + v * 0.1
 
         elif args.agent == 'implicit':
-            # Update every step after seed_steps
+            # Update every update_every steps after seed_steps
             horizon = getattr(config, 'horizon', 5)
-            if (step >= seed_steps and
+            update_every = getattr(config, 'update_every', 2)
+            if (step >= seed_steps and step % update_every == 0 and
                     buffer.num_transitions >= config.batch_size * (horizon + 1)):
                 batch = buffer.sample_transitions(config.batch_size, horizon)
                 metrics = agent.update(batch)
@@ -351,11 +348,7 @@ def main():
 
         # ------ Periodic evaluation ------
         if step % config.eval_every == 0:
-            eval_metrics = evaluate(
-                agent, config.env, config,
-                n_episodes=config.eval_episodes,
-                action_repeat=action_repeat
-            )
+            eval_metrics = evaluate(agent, eval_env, n_episodes=config.eval_episodes)
             logger.log(step, eval_metrics)
             print(f'[eval] step={step} '
                   f'return={eval_metrics["eval/mean_return"]:.2f} '
@@ -367,11 +360,7 @@ def main():
             print(f'[ckpt] Saved checkpoint at step {step}: {path}')
 
     # Final evaluation + checkpoint
-    eval_metrics = evaluate(
-        agent, config.env, config,
-        n_episodes=config.eval_episodes,
-        action_repeat=action_repeat
-    )
+    eval_metrics = evaluate(agent, eval_env, n_episodes=config.eval_episodes)
     logger.log(step, eval_metrics)
     print(f'[eval] FINAL step={step} '
           f'return={eval_metrics["eval/mean_return"]:.2f} '
@@ -382,6 +371,7 @@ def main():
     if buffer._current_ep is not None and len(buffer._current_ep.get('obs', [])) > 0:
         buffer.end_episode()
     env.close()
+    eval_env.close()
     logger.close()
     print('[train] Done.')
 

@@ -38,14 +38,12 @@ DMC_ENVS = {
     'dmc_swimmer_swimmer15':  ('swimmer',  'swimmer15'),
 }
 
-# ManiSkill: "maniskill_<env_id>"
+# ManiSkill2: "maniskill_<env_id>"  (mani_skill2 legacy API, v0 IDs)
 MANISKILL_ENVS = {
-    'maniskill_PickCube-v1':    'PickCube-v1',
-    'maniskill_PushCube-v1':    'PushCube-v1',
-    'maniskill_StackCube-v1':   'StackCube-v1',
-    'maniskill_CartPole-v1':    'CartPole-v1',
-    'maniskill_Walker2d-v2':    'Walker2d-v2',
-    'maniskill_HalfCheetah-v2': 'HalfCheetah-v2',
+    'maniskill_LiftCube-v0':        'LiftCube-v0',
+    'maniskill_PickCube-v0':        'PickCube-v0',
+    'maniskill_StackCube-v0':       'StackCube-v0',
+    'maniskill_PegInsertionSide-v0':'PegInsertionSide-v0',
 }
 
 # Gymnasium: "gym_<env_id>"  (standard gymnasium/mujoco envs)

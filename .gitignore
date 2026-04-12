@@ -6,3 +6,7 @@ tdmpc2/*
 tdmpc2
 __pycache__/
 seed_000/
+*.pt
+logs/
+__pycache__/
+*.pyc

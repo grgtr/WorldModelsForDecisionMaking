@@ -37,9 +37,9 @@ log_std_max: 2.0
 mpc: true
 horizon: 5             # planning horizon (H ≤ 30 constraint)
 mppi_iterations: 4     # CEM refinement iterations
-num_samples: 256       # action sequences sampled per MPPI step
-num_elites: 32         # elite trajectories to refit distribution
-num_pi_trajs: 16       # trajectories from learned policy prior
+num_samples: 64        # action sequences sampled per MPPI step
+num_elites: 8          # elite trajectories to refit distribution
+num_pi_trajs: 8        # trajectories from learned policy prior
 min_std: 0.05
 max_std: 2.0
 temperature: 0.5       # softmax temperature for elite weighting
@@ -51,4 +51,5 @@ discount_max: 0.995
 
 # ----- Training Loop -----
 batch_size: 256        # transitions per update
+update_every: 2        # gradient update every N env steps (1=every step)
 seed_steps: 1000       # random exploration before learning starts
