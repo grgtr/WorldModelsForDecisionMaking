@@ -3,44 +3,44 @@ Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
 The top-level auxiliary file: paper.aux
 The style file: icml2025.bst
 Database file #1: paper.bib
-You've used 11 entries,
+You've used 14 entries,
             2773 wiz_defined-function locations,
-            640 strings with 6561 characters,
-and the built_in function-call counts, 5444 in all, are:
-= -- 418
-> -- 427
-< -- 2
-+ -- 143
-- -- 132
-* -- 453
-:= -- 856
-add.period$ -- 33
-call.type$ -- 11
-change.case$ -- 77
-chr.to.int$ -- 11
-cite$ -- 22
-duplicate$ -- 251
-empty$ -- 430
-format.name$ -- 145
-if$ -- 1121
+            655 strings with 7352 characters,
+and the built_in function-call counts, 7587 in all, are:
+= -- 578
+> -- 669
+< -- 3
++ -- 224
+- -- 210
+* -- 658
+:= -- 1218
+add.period$ -- 42
+call.type$ -- 14
+change.case$ -- 111
+chr.to.int$ -- 14
+cite$ -- 28
+duplicate$ -- 311
+empty$ -- 530
+format.name$ -- 227
+if$ -- 1540
 int.to.chr$ -- 1
 int.to.str$ -- 1
-missing$ -- 11
-newline$ -- 63
-num.names$ -- 44
-pop$ -- 184
+missing$ -- 14
+newline$ -- 78
+num.names$ -- 56
+pop$ -- 251
 preamble$ -- 1
-purify$ -- 66
+purify$ -- 97
 quote$ -- 0
-skip$ -- 179
+skip$ -- 242
 stack$ -- 0
-substring$ -- 47
-swap$ -- 19
+substring$ -- 71
+swap$ -- 22
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 121
+type$ -- 154
 warning$ -- 0
-while$ -- 35
+while$ -- 45
 width$ -- 0
-write$ -- 140
+write$ -- 177

@@ -1,9 +1,23 @@
-\begin{thebibliography}{11}
+\begin{thebibliography}{14}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Cadene et~al.(2025)]{smolvla2025}
+Cadene, R. et~al.
+\newblock {SmolVLA}: A compact vision-language-action model for affordable
+  robotics.
+\newblock \emph{arXiv preprint arXiv:2506.01844}, 2025.
+
+\bibitem[Gu et~al.(2023)Gu, Xiang, Li, Ling, Liu, Mu, Tang, Tao, Wei, Yao,
+  Yuan, Xin, Huang, and Su]{gu2023maniskill2}
+Gu, J., Xiang, F., Li, X., Ling, Z., Liu, X., Mu, T., Tang, Y., Tao, S., Wei,
+  X., Yao, Y., Yuan, X., Xin, P., Huang, Z., and Su, H.
+\newblock {ManiSkill2}: A unified benchmark for generalizable manipulation
+  skills.
+\newblock In \emph{International Conference on Learning Representations}, 2023.
 
 \bibitem[Ha \& Schmidhuber(2018)Ha and Schmidhuber]{ha2018worldmodels}
 Ha, D. and Schmidhuber, J.
@@ -40,10 +54,10 @@ Hansen, N., Wang, X., and Su, H.
 \newblock Temporal difference learning for model predictive control.
 \newblock In \emph{International Conference on Machine Learning}, 2022.
 
-\bibitem[Hansen et~al.(2024)Hansen, Su, and Wang]{hansen2024tdmpc2}
-Hansen, N., Su, H., and Wang, X.
+\bibitem[Hansen et~al.(2024)Hansen, Wang, and Su]{hansen2024tdmpc2}
+Hansen, N., Wang, H., and Su, X.
 \newblock {TD-MPC2}: Scalable, robust world models for continuous control.
-\newblock In \emph{International Conference on Learning Representations}, 2024.
+\newblock \emph{arXiv preprint arXiv:2310.16828}, 2024.
 
 \bibitem[Kornblith et~al.(2019)Kornblith, Norouzi, Lee, and
   Hinton]{kornblith2019similarity}
@@ -64,6 +78,15 @@ Schulman, J., Moritz, P., Levine, S., Jordan, M., and Abbeel, P.
 \newblock High-dimensional continuous control using generalized advantage
   estimation.
 \newblock In \emph{International Conference on Learning Representations}, 2016.
+
+\bibitem[Tunyasuvunakool et~al.(2020)Tunyasuvunakool, Muldal, Doron, Liu,
+  Bohez, Merel, Erez, Lillicrap, Heess, and
+  Tassa]{tunyasuvunakool2020dmcontrol}
+Tunyasuvunakool, S., Muldal, A., Doron, Y., Liu, S., Bohez, S., Merel, J.,
+  Erez, T., Lillicrap, T., Heess, N., and Tassa, Y.
+\newblock dm\_control: Software package for physics-based simulation in
+  continuous control.
+\newblock \emph{Software Impacts}, 6:\penalty0 100022, 2020.
 
 \bibitem[Williams et~al.(2017)Williams, Wagener, Goldfain, Drews, Rehg, Boots,
   and Theodorou]{williams2017mppi}

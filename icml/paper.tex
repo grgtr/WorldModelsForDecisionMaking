@@ -253,12 +253,12 @@ cost of retaining full checkpoints.
 
 Experiments are conducted on three environments:
 \begin{itemize}[nosep,leftmargin=1em]
-  \item \textbf{ManiSkill2 LiftCube-v0}: 42-dim state, 8-dim action, precise
-        tabletop manipulation with dense reward, 200 steps/episode.
-  \item \textbf{DMControl cartpole\_swingup}: 5-dim state, 1-dim action, classic
-        balance task from pixels-free DMControl suite.
-  \item \textbf{DMControl walker\_walk}: 24-dim state, 6-dim action, bipedal
-        locomotion requiring coordinated gait.
+  \item \textbf{ManiSkill2 LiftCube-v0} \citep{gu2023maniskill2}: 42-dim state,
+        8-dim action, precise tabletop manipulation with dense reward, 200 steps/episode.
+  \item \textbf{DMControl cartpole\_swingup} \citep{tunyasuvunakool2020dmcontrol}: 5-dim state,
+        1-dim action, classic balance task from the DMControl suite.
+  \item \textbf{DMControl walker\_walk} \citep{tunyasuvunakool2020dmcontrol}: 24-dim state,
+        6-dim action, bipedal locomotion requiring coordinated gait.
 \end{itemize}
 All runs use 200k environment steps and 3 random seeds.
 
@@ -638,12 +638,88 @@ Extending the horizon beyond 5 steps or adding a model-based rollout penalty cou
 stabilise planning.
 
 %------------------------------------------------------------------------------
-\section*{Impact Statement}
+\section{Bonus: SmolVLA Vision Encoder vs.\ World Model Latents}
+\label{sec:smolvla}
 %------------------------------------------------------------------------------
 
-This paper presents work whose goal is to advance the field of Machine Learning.
-There are many potential societal consequences of this work, none of which need to
-be specifically highlighted here.
+To situate the two world-model representations in a broader context, SmolVLA
+\citep{smolvla2025}—a 500M-parameter Vision-Language-Action model using a
+SigLIP vision encoder (via SmolVLM-2)—is fine-tuned on LiftCube-v0 and its
+visual representations are compared to the world-model latents.
+
+\textbf{Setup.}
+100 demonstration episodes are generated in ManiSkill2 and saved in LeRobot
+format (Parquet + MP4).
+SmolVLA is fine-tuned for 1\,000 gradient steps using LoRA
+($r{=}16$, $\alpha{=}32$, targeting all attention and FFN projection layers),
+without 4-bit quantisation (the 500M-parameter model occupies ${\approx}1$\,GB
+at bfloat16).
+For the comparison, 512 paired $(\text{state}_{42}, \text{RGB}_{224\times224\times3})$
+observations are collected from the environment.
+World-model latents $z \in \mathbb{R}^{64}$ are obtained via the agents'
+\texttt{encode()} method.
+SmolVLA visual tokens (64 tokens $\times$ 1152 dims per image) are mean-pooled
+to $z_\text{VLA} \in \mathbb{R}^{1152}$, then reduced to 50 PCA dimensions
+before CCA (required since 512 samples $\ll$ 1152 features).
+
+\textbf{Results.}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Linear probing $R^2$ (median over 42 state coordinates), latent geometry,
+         and pairwise CCA alignment on LiftCube-v0.}
+\label{tab:smolvla}
+\begin{tabular}{lrrrrr}
+\toprule
+Representation & $R^2$ & PR & dims$_{95}$ & dead & CCA$_\text{vs.\ implicit}$ \\
+\midrule
+Explicit (RSSM)     & $-1.53$ & 34.4 & 46  & 0.062 & 0.69 \\
+Implicit (TD-MPC2)  & $+0.87$ &  4.4 &  7  & 0.016 & —    \\
+SmolVLA (SigLIP)    & $-3.52$ & 353.8 & 407 & 0.000 & 0.49 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Linear probing.}
+The implicit agent's latent retains most task-relevant state information
+($R^2{=}0.87$), consistent with its consistency-based objective.
+Both the explicit RSSM ($R^2{=}{-}1.53$) and SmolVLA ($R^2{=}{-}3.52$)
+are not linearly decodable into raw joint coordinates:
+the RSSM because its single-step discrete posterior is computed without
+temporal GRU context, and SmolVLA because its SigLIP features encode visual
+semantics (textures, shapes, scene layout) rather than metric robot state.
+The negative values indicate that the linear probe predicts state coordinates
+worse than the global mean—consistent with a representation space in which
+the relevant structure is non-linear or absent.
+
+\textbf{Latent geometry.}
+The three representations occupy qualitatively different geometric regimes.
+The implicit agent's latent is extremely compact (PR$\approx 4.4$, dims$_{95}{=}7$),
+reflecting a task-focused, low-redundancy encoding enforced by SimNorm.
+The explicit RSSM occupies moderate dimensionality (PR$\approx 34$, dims$_{95}{=}46$).
+SmolVLA occupies a vastly larger effective space (PR$\approx 354$,
+dims$_{95}{=}407$): the SigLIP encoder was pre-trained on diverse internet
+imagery, so its 1152-dimensional space captures hundreds of orthogonal visual
+axes unrelated to this specific manipulation task.
+The zero dead-unit fraction in SmolVLA reflects this broad coverage.
+
+\textbf{CCA alignment.}
+The two world models share moderate linear structure with each other
+(mean CCA $\approx 0.69$), expected since both encode the same 42-dimensional
+state observations.
+SmolVLA aligns weakly with both world models (mean CCA $\approx 0.49$–$0.50$),
+close to the noise floor, confirming that the VLM and state-based world models
+encode fundamentally different information despite operating on the same scenes.
+
+\textbf{Takeaway.}
+Fine-tuned SmolVLA's vision encoder and state-based world models are
+complementary rather than interchangeable.
+The world models capture compact, task-aligned state structure; SmolVLA captures
+rich visual semantics distributed across hundreds of dimensions.
+Combining both—for example, by conditioning planning on VLM-encoded language
+goals while using a state-based world model for dynamics prediction—is a natural
+direction for future work.
 
 %------------------------------------------------------------------------------
 \bibliography{paper}

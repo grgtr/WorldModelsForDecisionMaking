@@ -1,11 +1,14 @@
 """
-ManiSkill2 environment wrapper - state observations only.
+ManiSkill2 environment wrapper - state observations, with optional RGB.
 
 Supported tasks (obs_mode="state"):
   PickCube-v1, PushCube-v1, StackCube-v1
   CartPole-v1, Walker2d-v2, HalfCheetah-v2 (ManiSkill reimplementations)
 
 Requires: mani_skill2 (or mani_skill)
+
+When return_rgb=True, reset() returns (state, rgb) and step() returns
+(state, rgb, reward, done, info) where rgb is uint8 [H, W, 3].
 """
 
 import numpy as np
@@ -37,7 +40,14 @@ class ManiSkillEnv:
     """
 
     def __init__(self, env_id: str, action_repeat: int = 2, seed: int = 0,
-                 obs_mode: str = 'state', control_mode: str = 'pd_joint_delta_pos'):
+                 obs_mode: str = 'state', control_mode: str = 'pd_joint_delta_pos',
+                 return_rgb: bool = False, rgb_size: int = 224):
+        """
+        Args:
+            return_rgb: If True, reset() returns (state, rgb) and step() returns
+                        (state, rgb, reward, done, info). rgb is uint8 [rgb_size, rgb_size, 3].
+            rgb_size:   Side length (pixels) for returned RGB frames.
+        """
         if not MANISKILL_AVAILABLE:
             raise ImportError("mani_skill2 or mani_skill is required.")
 
@@ -48,8 +58,11 @@ class ManiSkillEnv:
 
         self._action_repeat = action_repeat
         self._seed = seed
+        self._return_rgb = return_rgb
+        self._rgb_size = rgb_size
 
-        env_kwargs = dict(obs_mode=obs_mode, render_mode=None, reward_mode='dense')
+        render_mode = 'rgb_array' if return_rgb else None
+        env_kwargs = dict(obs_mode=obs_mode, render_mode=render_mode, reward_mode='dense')
         if 'Cube' in env_id or 'Pick' in env_id or 'Push' in env_id or 'Stack' in env_id or 'Lift' in env_id:
             env_kwargs['control_mode'] = control_mode
 
@@ -71,6 +84,22 @@ class ManiSkillEnv:
         self._act_low = act_space.low.astype(np.float32)
         self._act_high = act_space.high.astype(np.float32)
 
+    def _render_rgb(self) -> np.ndarray:
+        """Render current frame and resize to (rgb_size, rgb_size, 3) uint8."""
+        frame = self._env.render()  # [H, W, 3] uint8
+        if frame is None:
+            return np.zeros((self._rgb_size, self._rgb_size, 3), dtype=np.uint8)
+        if frame.shape[0] != self._rgb_size or frame.shape[1] != self._rgb_size:
+            try:
+                import cv2
+                frame = cv2.resize(frame, (self._rgb_size, self._rgb_size),
+                                   interpolation=cv2.INTER_LINEAR)
+            except ImportError:
+                from PIL import Image
+                frame = np.array(Image.fromarray(frame).resize(
+                    (self._rgb_size, self._rgb_size), Image.BILINEAR))
+        return frame.astype(np.uint8)
+
     def _flatten_obs(self, obs) -> np.ndarray:
         if isinstance(obs, dict):
             parts = []
@@ -82,13 +111,16 @@ class ManiSkillEnv:
             return np.concatenate(parts) if parts else np.zeros(1, dtype=np.float32)
         return np.atleast_1d(obs).astype(np.float32).flatten()
 
-    def reset(self) -> np.ndarray:
+    def reset(self):
         result = self._env.reset(seed=self._seed)
         if isinstance(result, tuple):
             obs, _ = result
         else:
             obs = result
-        return self._flatten_obs(obs)
+        state = self._flatten_obs(obs)
+        if self._return_rgb:
+            return state, self._render_rgb()
+        return state
 
     def step(self, action: np.ndarray):
         action = np.clip(action, -1.0, 1.0)
@@ -107,7 +139,10 @@ class ManiSkillEnv:
             if done:
                 break
 
-        return self._flatten_obs(obs), reward, done, info
+        state = self._flatten_obs(obs)
+        if self._return_rgb:
+            return state, self._render_rgb(), reward, done, info
+        return state, reward, done, info
 
     def random_action(self) -> np.ndarray:
         return np.random.uniform(-1.0, 1.0, size=(self.act_dim,)).astype(np.float32)

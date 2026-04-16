@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.4.12)  16 APR 2026 14:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.4.12)  16 APR 2026 20:52
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -665,7 +665,12 @@ LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 2
  (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves.png, id=84, 49
+Underfull \hbox (badness 1622) in paragraph at lines 260--262
+[]\OT1/ptm/b/n/10 (+20) DMControl walker[]walk \OT1/ptm/m/n/10 (+20) ([][]Tun-y
+a-su-vu-nakool et al.[][],
+ []
+
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves.png, id=90, 49
 5.7722pt x 351.2322pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves.png Graph
 ic file (type png)
@@ -673,13 +678,16 @@ ic file (type png)
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/learni
 ng_curves.png  used on input line 275.
 (pdftex.def)             Requested size: 234.8775pt x 166.39755pt.
-<../figures_v2/asymptotic_performance.png, id=86, 1067.187pt x 352.1958pt>
+<../figures_v2/asymptotic_performance.png, id=92, 1067.187pt x 352.1958pt>
 File: ../figures_v2/asymptotic_performance.png Graphic file (type png)
 <use ../figures_v2/asymptotic_performance.png>
 Package pdftex.def Info: ../figures_v2/asymptotic_performance.png  used on inpu
 t line 288.
 (pdftex.def)             Requested size: 234.8775pt x 77.51555pt.
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utilization.png, id=89, 856
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utilization.png, id=95, 856
 .6404pt x 356.532pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utilization.png Graphi
 c file (type png)
@@ -748,7 +756,7 @@ Underfull \hbox (badness 2103) in paragraph at lines 372--383
 \OT1/ptm/m/n/10 (+20) through-out train-ing. The hori-zon degra-da-tion ra-tio
  []
 
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png, id=111, 499.
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png, id=119, 499.
 1448pt x 351.2322pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png Graphic 
 file (type png)
@@ -756,7 +764,7 @@ file (type png)
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evo
 lution.png  used on input line 437.
 (pdftex.def)             Requested size: 234.8775pt x 165.2721pt.
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png, id=112
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png, id=120
 , 927.9468pt x 356.532pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png Gr
 aphic file (type png)
@@ -769,28 +777,26 @@ Underfull \hbox (badness 10000) in paragraph at lines 457--457
 [][][]\OT1/ptm/m/n/9 (+20) Latent ge-om-e-try over 20 snap-shot steps on
  []
 
-[4pdfTeX warning (ext4): destination with the same identifier (name{table.4}) h
-as been already used, duplicate ignored
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [4pdfTeX warning (ext4): destination with the same identifier (name{table.4}) 
+has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.468 
-      pdfTeX warning (ext4): destination with the same identifier (name{figure.
-4}) has been already used, duplicate ignored
+l.475 \end{itemize}
+                   pdfTeX warning (ext4): destination with the same identifier 
+(name{figure.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.468 
-      pdfTeX warning (ext4): destination with the same identifier (name{figure.
-5}) has been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.468 
-       <../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png> <../a
-nalysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png>]
+l.475 \end{itemize}
+                    <../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evoluti
+on.png>]
 Overfull \hbox (4.66411pt too wide) in paragraph at lines 549--560
  [] 
  []
 
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline.png, id=131, 499.
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline.png, id=138, 499.
 1448pt x 351.2322pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline.png Graphic 
 file (type png)
@@ -803,17 +809,23 @@ Underfull \hbox (badness 10000) in paragraph at lines 585--585
 [][][]\OT1/ptm/m/n/9 (+20) Cross-agent CCA over 20 snap-shot steps on
  []
 
-[5pdfTeX warning (ext4): destination with the same identifier (name{table.5}) h
-as been already used, duplicate ignored
+[5pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) 
+has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.618 
+l.607 
+      pdfTeX warning (ext4): destination with the same identifier (name{table.5
+}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.607 
       pdfTeX warning (ext4): destination with the same identifier (name{table.6
 }) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.618 
-      ]
+l.607 
+       <../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png>
+]
 LaTeX Info: Symbol \textrightarrow not provided by
             font family ptm in TS1 encoding.
             Default family used instead on input line 621.
@@ -824,82 +836,109 @@ LaTeX Info: Symbol \textrightarrow not provided by
 Underfull \vbox (badness 2913) has occurred while \output is active []
 
 
-(./paper.bbl [6pdfTeX warning (ext4): destination with the same identifier (nam
-e{figure.6}) has been already used, duplicate ignored
+Underfull \hbox (badness 1521) in paragraph at lines 645--649
+[]\OT1/ptm/m/n/10 (+20) To sit-u-ate the two world-model rep-re-sen-ta-tions in
+ a
+ []
+
+
+Underfull \hbox (badness 1194) in paragraph at lines 645--649
+\OT1/ptm/m/n/10 (+20) broader con-text, SmolVLA ([][]Ca-dene et al.[][], [][]20
+25[][])|a
+ []
+
+
+Overfull \hbox (47.85666pt too wide) in paragraph at lines 673--682
+ [][] 
+ []
+
+[6pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) 
+has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.76 \end{thebibliography}
-                           <../analysis_v2/aggregated/maniskill_LiftCube-v0/cca
-_timeline.png>])
-<../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves.png, id=155, 50
+l.696 \textbf{Latent geometry.}
+                               pdfTeX warning (ext4): destination with the same
+ identifier (name{table.7}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.696 \textbf{Latent geometry.}
+                                <../analysis_v2/aggregated/maniskill_LiftCube-v
+0/cca_timeline.png>] (./paper.bbl)
+<../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves.png, id=166, 50
 2.0356pt x 351.2322pt>
 File: ../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves.png Graphi
 c file (type png)
 <use ../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_cartpole_swingup/learnin
-g_curves.png  used on input line 662.
+g_curves.png  used on input line 738.
 (pdftex.def)             Requested size: 234.8775pt x 164.32349pt.
-<../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png, id=156, 508.299
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+<../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png, id=167, 508.299
 pt x 351.2322pt>
 File: ../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png Graphic fil
 e (type png)
 <use ../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_walker_walk/learning_cur
-ves.png  used on input line 674.
+ves.png  used on input line 750.
 (pdftex.def)             Requested size: 234.8775pt x 162.29764pt.
-<../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png, id=157, 856
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+<../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png, id=168, 856
 .6404pt x 356.532pt>
 File: ../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png Graphic
  file (type png)
 <use ../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_cartpole_swingup/kl_util
-ization.png  used on input line 686.
+ization.png  used on input line 762.
 (pdftex.def)             Requested size: 234.8775pt x 97.75554pt.
-
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../analysis_v2/aggregated/dmc_walker_walk/kl_utilization.png, id=158, 856.6404
+<../analysis_v2/aggregated/dmc_walker_walk/kl_utilization.png, id=169, 856.6404
 pt x 356.532pt>
 File: ../analysis_v2/aggregated/dmc_walker_walk/kl_utilization.png Graphic file
  (type png)
 <use ../analysis_v2/aggregated/dmc_walker_walk/kl_utilization.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_walker_walk/kl_utilizati
-on.png  used on input line 698.
+on.png  used on input line 774.
 (pdftex.def)             Requested size: 234.8775pt x 97.75554pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health.png, id=159, 85
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health.png, id=170, 85
 7.604pt x 356.532pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health.png Graphi
 c file (type png)
 <use ../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/planne
-r_health.png  used on input line 710.
+r_health.png  used on input line 786.
 (pdftex.def)             Requested size: 234.8775pt x 97.6413pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../figures_v2/sample_efficiency.png, id=160, 1067.187pt x 352.1958pt>
+<../figures_v2/sample_efficiency.png, id=171, 1067.187pt x 352.1958pt>
 File: ../figures_v2/sample_efficiency.png Graphic file (type png)
 <use ../figures_v2/sample_efficiency.png>
 Package pdftex.def Info: ../figures_v2/sample_efficiency.png  used on input lin
-e 725.
+e 801.
 (pdftex.def)             Requested size: 234.8775pt x 77.51555pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png, id=161,
+<../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png, id=172,
  927.9468pt x 356.532pt>
 File: ../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png Gra
 phic file (type png)
 <use ../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_cartpole_swingup/geometr
-y_evolution.png  used on input line 737.
+y_evolution.png  used on input line 813.
 (pdftex.def)             Requested size: 234.8775pt x 90.24258pt.
 
-Underfull \hbox (badness 2173) in paragraph at lines 740--740
+Underfull \hbox (badness 2173) in paragraph at lines 816--816
 [][][]\OT1/ptm/m/n/9 (+20) Geometry evo-lu-tion on \OT1/pcr/m/n/9 cartpole[]swi
 ngup \OT1/ptm/m/n/9 (+20) (3
  []
@@ -907,67 +946,66 @@ ngup \OT1/ptm/m/n/9 (+20) (3
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png, id=162, 927.
+<../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png, id=173, 927.
 9468pt x 356.532pt>
 File: ../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png Graphic 
 file (type png)
 <use ../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_walker_walk/geometry_evo
-lution.png  used on input line 749.
+lution.png  used on input line 825.
 (pdftex.def)             Requested size: 234.8775pt x 90.24258pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[7pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) 
-has been already used, duplicate ignored
+[7] [8pdfTeX warning (ext4): destination with the same identifier (name{figure.
+7}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.758 \end{document}
+l.834 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.8}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.758 \end{document}
+l.834 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.9}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.758 \end{document}
+l.834 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.10}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.758 \end{document}
+l.834 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.11}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.758 \end{document}
+l.834 \end{document}
+                    pdfTeX warning (ext4): destination with the same identifier
+ (name{figure.12}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.834 \end{document}
                      <../analysis_v2/aggregated/dmc_cartpole_swingup/learning_c
 urves.png> <../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png> <../
 analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png> <../analysis_v2
 /aggregated/dmc_walker_walk/kl_utilization.png> <../analysis_v2/aggregated/mani
-skill_LiftCube-v0/planner_health.png>] [8pdfTeX warning (ext4): destination wit
-h the same identifier (name{figure.12}) has been already used, duplicate ignore
-d
+skill_LiftCube-v0/planner_health.png> <../figures_v2/sample_efficiency.png>]
+[9pdfTeX warning (ext4): destination with the same identifier (name{figure.13})
+ has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.758 \end{document}
-                    pdfTeX warning (ext4): destination with the same identifier
- (name{figure.13}) has been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.758 \end{document}
+l.834 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.14}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.758 \end{document}
+l.834 \end{document}
                     
 
- <../figures_v2/sample_efficiency.png> <../analysis_v2/aggregated/dmc_cartpole_
-swingup/geometry_evolution.png> <../analysis_v2/aggregated/dmc_walker_walk/geom
-etry_evolution.png>] (./paper.aux)
+ <../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png> <../an
+alysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png>] (./paper.aux)
 
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
@@ -975,13 +1013,13 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 14866 strings out of 480247
- 239066 string characters out of 5896151
- 576660 words of memory out of 5000000
- 32193 multiletter control sequences out of 15000+600000
- 507808 words of font info for 268 fonts, out of 8000000 for 9000
+ 14906 strings out of 480247
+ 239636 string characters out of 5896151
+ 578082 words of memory out of 5000000
+ 32206 multiletter control sequences out of 15000+600000
+ 510214 words of font info for 283 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 60i,11n,69p,1002b,475s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,12n,69p,1002b,475s stack positions out of 5000i,500n,10000p,200000b,80000s
  </home/chikibriki/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm100
 0.600pk>{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/
 texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texliv
@@ -1001,10 +1039,10 @@ texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fo
 nts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/t
 imes/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on paper.pdf (8 pages, 1850273 bytes).
+Output written on paper.pdf (9 pages, 1858151 bytes).
 PDF statistics:
- 288 PDF objects out of 1000 (max. 8388607)
- 207 compressed objects within 3 object streams
- 61 named destinations out of 1000 (max. 500000)
- 59463 words of extra memory for PDF output out of 61914 (max. 10000000)
+ 304 PDF objects out of 1000 (max. 8388607)
+ 222 compressed objects within 3 object streams
+ 66 named destinations out of 1000 (max. 500000)
+ 63559 words of extra memory for PDF output out of 74296 (max. 10000000)
 

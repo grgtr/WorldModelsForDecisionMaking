@@ -1,0 +1,18 @@
+SmolVLA vs World Models — Representation Comparison Report
+============================================================
+
+--- Linear Probing R² (predict 42 obs coords from latent) ---
+  Explicit (RSSM)       median R² = -1.5342
+  Implicit (TD-MPC2)    median R² = 0.8695
+  SmolVLA               median R² = -3.5178
+
+--- Latent Geometry ---
+  Agent                       PR    dims95      dead   nominal
+  Explicit (RSSM)          34.39        46     0.062        64
+  Implicit (TD-MPC2)        4.43         7     0.016        64
+  SmolVLA                 353.79       407     0.000      1152
+
+--- Pairwise CCA Alignment ---
+  Explicit vs Implicit                      mean=0.6940  top-1=0.9634
+  Explicit vs SmolVLA                       mean=0.4972  top-1=0.5587
+  Implicit vs SmolVLA                       mean=0.4896  top-1=0.5594
