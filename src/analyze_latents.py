@@ -1,12 +1,15 @@
 """
 Latent Space Analysis Script.
 
-Five analyses:
-  1. Linear Probing (R²)     — how well latents decode obs coordinates
-  2. CCA Alignment           — shared structure between the two latent spaces
-  3. Effective Dimensionality — how many PCA dims are actually used
-  4. Reward Predictability   — does z_t predict r_{t+1} beyond obs alone?
-  5. Representation Evolution — how all metrics change across training checkpoints
+Analyses:
+  1. Linear Probing (R²)         — how well latents decode obs coordinates
+  2. CCA Alignment               — shared structure between the two latent spaces
+  3. Effective Dimensionality    — how many PCA dims are actually used
+  4. Reward Predictability       — does z_t predict r_{t+1} beyond obs alone?
+  5. Representation Evolution    — how all metrics change across training checkpoints
+  6. Snapshot Geometry Timeline  — continuous eff-dim + dead-unit curves from snapshot NPZs
+  7. Metrics Timeline            — KL utilization, horizon degradation, MPPI planner confidence
+  8. Cross-Agent CCA Timeline    — CCA correlation between agents at each shared snapshot step
 
 Usage:
     python src/analyze_latents.py \
@@ -17,10 +20,10 @@ Usage:
 
 import argparse
 import glob
+import json
 import os
 import re
 import sys
-import types
 import numpy as np
 import torch
 
@@ -41,7 +44,6 @@ try:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    import seaborn as sns
     MPL_AVAILABLE = True
 except ImportError:
     MPL_AVAILABLE = False
@@ -66,6 +68,8 @@ def parse_args():
     p.add_argument('--output',  type=str, default='analysis/')
     p.add_argument('--seed',    type=int, default=0)
     p.add_argument('--device',  type=str, default='cuda')
+    p.add_argument('--skip_env_collection', action='store_true',
+                   help='Skip env-based collection (analyses 1-5); use only snapshots+metrics')
     return p.parse_args()
 
 
@@ -84,6 +88,421 @@ def discover_checkpoints(final_ckpt: str) -> list:
     files = sorted(glob.glob(os.path.join(ckpt_dir, 'checkpoint_*.pt')),
                    key=_step_from_path)
     return files
+
+
+def _run_dir_from_ckpt(ckpt_path: str) -> str:
+    """Given a checkpoint path, return the run directory (parent of 'checkpoints/')."""
+    ckpt_dir = os.path.dirname(ckpt_path)
+    run_dir = os.path.dirname(ckpt_dir)
+    return run_dir
+
+
+def discover_snapshots(ckpt_path: str) -> str:
+    """Return snapshot directory corresponding to a checkpoint file."""
+    return os.path.join(_run_dir_from_ckpt(ckpt_path), 'latent_snapshots')
+
+
+def discover_metrics(ckpt_path: str) -> str:
+    """Return metrics.jsonl path corresponding to a checkpoint file."""
+    return os.path.join(_run_dir_from_ckpt(ckpt_path), 'metrics.jsonl')
+
+
+# ---------------------------------------------------------------------------
+# Snapshot / metrics loaders
+# ---------------------------------------------------------------------------
+
+def load_snapshots(snapshot_dir: str) -> list:
+    """Load all snapshot NPZ files from a directory, sorted by step.
+
+    Returns a list of dicts with keys: step, obs, z, reward, action.
+    """
+    files = sorted(glob.glob(os.path.join(snapshot_dir, 'snapshot_*.npz')))
+    snapshots = []
+    for f in files:
+        try:
+            d = np.load(f)
+            snapshots.append({
+                'step': int(d['step']),
+                'obs': d['obs'],
+                'z': d['z'],
+                'reward': d['reward'],
+                'action': d['action'],
+            })
+        except Exception as ex:
+            print(f'  [WARN] Could not load snapshot {f}: {ex}', flush=True)
+    return snapshots
+
+
+def load_metrics_jsonl(metrics_path: str) -> list:
+    """Load metrics.jsonl, replacing JSON-invalid NaN/Inf with Python equivalents."""
+    if not os.path.exists(metrics_path):
+        return []
+    records = []
+    with open(metrics_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            # Replace JSON-invalid tokens before parsing
+            line = line.replace(': Infinity,', ': null,').replace(': Infinity}', ': null}')
+            line = line.replace(': NaN,', ': null,').replace(': NaN}', ': null}')
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+    return records
+
+
+# ---------------------------------------------------------------------------
+# Geometry helpers (applied to snapshot latents)
+# ---------------------------------------------------------------------------
+
+def _participation_ratio(z: np.ndarray) -> float:
+    """Participation ratio = (sum λ)² / sum λ² — equals D if all dims equal."""
+    if not SKLEARN_AVAILABLE:
+        return float('nan')
+    zs = StandardScaler().fit_transform(z)
+    pca = PCA().fit(zs)
+    lam = pca.explained_variance_
+    return float((lam.sum() ** 2) / ((lam ** 2).sum() + 1e-10))
+
+
+def _dims_for_variance(z: np.ndarray, threshold: float = 0.95) -> int:
+    if not SKLEARN_AVAILABLE:
+        return -1
+    zs = StandardScaler().fit_transform(z)
+    pca = PCA().fit(zs)
+    cumvar = np.cumsum(pca.explained_variance_ratio_)
+    hits = np.where(cumvar >= threshold)[0]
+    return int(hits[0] + 1) if len(hits) else z.shape[1]
+
+
+def _dead_unit_frac(z: np.ndarray, threshold: float = 0.01) -> float:
+    """Fraction of latent dimensions with std < threshold across the batch."""
+    per_dim_std = z.std(axis=0)
+    return float((per_dim_std < threshold).mean())
+
+
+# ---------------------------------------------------------------------------
+# Analysis 6: Snapshot Geometry Timeline
+# ---------------------------------------------------------------------------
+
+def _snapshot_r2(obs: np.ndarray, z: np.ndarray) -> float:
+    """Median R² of Ridge regression (z → obs) — same metric as linear_probing()
+    but applied to a single snapshot's (obs, z) arrays without env interaction."""
+    if not SKLEARN_AVAILABLE or len(z) < 10:
+        return float('nan')
+    Z = StandardScaler().fit_transform(z.astype(np.float64))
+    ridge = Ridge(alpha=1.0)
+    scores = []
+    for coord in range(obs.shape[1]):
+        y = obs[:, coord].astype(np.float64)
+        try:
+            cv = cross_val_score(ridge, Z, y, cv=min(5, len(Z)), scoring='r2')
+            scores.append(float(np.mean(cv)))
+        except Exception:
+            pass
+    return float(np.median(scores)) if scores else float('nan')
+
+
+def snapshot_geometry_analysis(snapshots_e: list, snapshots_i: list,
+                                output_dir: str) -> dict:
+    """From pre-saved snapshots compute continuous geometry + decodability curves.
+
+    Replaces the checkpoint-based representation_evolution analysis with 20 data
+    points from tiny NPZ files — no env rollouts or agent re-loading required.
+
+    Metrics per snapshot:
+      - participation_ratio   (effective dimensionality)
+      - dims_95pct            (dims needed for 95% variance)
+      - dead_unit_frac        (fraction of dims with std < 0.01)
+      - median_r2             (linear probing R²: z → obs coords)
+    """
+    def _process(snaps, label):
+        steps, pr_vals, dims95, dead, r2_vals = [], [], [], [], []
+        for s in snaps:
+            z = s['z'].astype(np.float64)
+            obs = s['obs'].astype(np.float64)
+            steps.append(s['step'])
+            pr_vals.append(_participation_ratio(z))
+            dims95.append(_dims_for_variance(z, 0.95))
+            dead.append(_dead_unit_frac(z))
+            r2 = _snapshot_r2(obs, z)
+            r2_vals.append(r2)
+            print(f'  [{label}] step={s["step"]}  PR={pr_vals[-1]:.2f}  '
+                  f'dims95={dims95[-1]}  dead={dead[-1]:.3f}  '
+                  f'median_R²={r2:.4f}', flush=True)
+        return steps, pr_vals, dims95, dead, r2_vals
+
+    print('\n[Snapshot Geometry] Explicit agent:', flush=True)
+    steps_e, pr_e, dims95_e, dead_e, r2_e = _process(snapshots_e, 'explicit')
+    print('\n[Snapshot Geometry] Implicit agent:', flush=True)
+    steps_i, pr_i, dims95_i, dead_i, r2_i = _process(snapshots_i, 'implicit')
+
+    result = {
+        'explicit_steps': steps_e, 'explicit_participation_ratio': pr_e,
+        'explicit_dims_95pct': dims95_e, 'explicit_dead_unit_frac': dead_e,
+        'explicit_median_r2': r2_e,
+        'implicit_steps': steps_i, 'implicit_participation_ratio': pr_i,
+        'implicit_dims_95pct': dims95_i, 'implicit_dead_unit_frac': dead_i,
+        'implicit_median_r2': r2_i,
+    }
+
+    if MPL_AVAILABLE and (steps_e or steps_i):
+        os.makedirs(output_dir, exist_ok=True)
+
+        # -- Plot A: geometry (PR, dims95, dead units) --
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        for ax, ye, yi, title, ylabel in [
+            (axes[0], pr_e, pr_i,
+             'Participation Ratio over Training', 'Participation Ratio (eff. dims)'),
+            (axes[1], dims95_e, dims95_i,
+             'Dims for 95% Variance over Training', 'Dims for 95% Variance'),
+            (axes[2], dead_e, dead_i,
+             'Dead Unit Fraction over Training', 'Fraction of Dead Dims (std < 0.01)'),
+        ]:
+            if steps_e:
+                ax.plot(steps_e, ye, 'o-', color='steelblue', label='Explicit (RSSM)')
+            if steps_i:
+                ax.plot(steps_i, yi, 's--', color='darkorange', label='Implicit (TD-MPC2)')
+            ax.set_xlabel('Training Step'); ax.set_ylabel(ylabel)
+            ax.set_title(title); ax.legend(); ax.grid(True, alpha=0.3)
+        plt.suptitle('Latent Geometry Timeline (from Snapshots)', fontsize=13)
+        plt.tight_layout()
+        path = os.path.join(output_dir, 'snapshot_geometry_timeline.png')
+        plt.savefig(path, dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f'  Saved: {path}', flush=True)
+
+        # -- Plot B: linear probing R² evolution (20 points vs 3 from checkpoints) --
+        fig, ax = plt.subplots(figsize=(9, 5))
+        if steps_e and any(not np.isnan(v) for v in r2_e):
+            ax.plot(steps_e, r2_e, 'o-', color='steelblue', label='Explicit (RSSM)')
+        if steps_i and any(not np.isnan(v) for v in r2_i):
+            ax.plot(steps_i, r2_i, 's--', color='darkorange', label='Implicit (TD-MPC2)')
+        ax.axhline(0, color='gray', linestyle=':', alpha=0.5)
+        ax.set_xlabel('Training Step'); ax.set_ylabel('Median R²')
+        ax.set_title('Linear Decodability over Training\n(from snapshot obs+z pairs — 20 points)')
+        ax.legend(); ax.grid(True, alpha=0.3)
+        plt.tight_layout()
+        path = os.path.join(output_dir, 'snapshot_r2_evolution.png')
+        plt.savefig(path, dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f'  Saved: {path}', flush=True)
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Analysis 7: Metrics Timeline (from metrics.jsonl)
+# ---------------------------------------------------------------------------
+
+def metrics_timeline_analysis(metrics_e: list, metrics_i: list,
+                               output_dir: str) -> dict:
+    """Parse logged metrics and produce timeline plots for key diagnostics.
+
+    Explicit agent:
+      - wm/kl_active_vars     (how many of 8 categorical variables are active)
+      - wm/kl_min_var         (KL of the least-used variable — near 0 = collapse)
+      - latent/z_active_frac  (fraction of dims with std > 0.01)
+
+    Implicit agent:
+      - latent/consistency_tH / latent/consistency_t0   (horizon degradation ratio)
+      - latent/mppi_elite_value_std                     (planner diversity)
+      - latent/mppi_plan_std                            (action distribution breadth)
+      - latent/z_active_frac
+    """
+    def _extract(records, keys):
+        out = {k: [] for k in keys + ['step']}
+        for r in records:
+            if any(r.get(k) is not None for k in keys):
+                out['step'].append(r['step'])
+                for k in keys:
+                    out[k].append(r.get(k))
+        return out
+
+    e_keys = ['wm/kl_active_vars', 'wm/kl_min_var', 'latent/z_active_frac',
+              'latent/encoder_grad_norm']
+    i_keys = ['latent/consistency_t0', 'latent/consistency_tH',
+              'latent/mppi_elite_value_std', 'latent/mppi_plan_std',
+              'latent/z_active_frac', 'latent/encoder_grad_norm']
+
+    e_data = _extract(metrics_e, e_keys)
+    i_data = _extract(metrics_i, i_keys)
+
+    # Compute derived: horizon degradation ratio = consistency_tH / consistency_t0
+    degradation = []
+    for t0, tH in zip(i_data['latent/consistency_t0'], i_data['latent/consistency_tH']):
+        if t0 is not None and t0 > 1e-10 and tH is not None:
+            degradation.append(tH / t0)
+        else:
+            degradation.append(None)
+
+    result = {
+        'explicit': {k: e_data[k] for k in e_keys + ['step']},
+        'implicit': {k: i_data[k] for k in i_keys + ['step']},
+        'implicit_horizon_degradation_ratio': degradation,
+    }
+
+    if not MPL_AVAILABLE:
+        return result
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    # -- Plot 1: KL utilization (explicit) --
+    if e_data['step']:
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        steps_e = e_data['step']
+        for ax, key, title, ylabel, color in [
+            (axes[0], 'wm/kl_active_vars',
+             'KL Active Variables', 'Variables with KL > 0.1 nats', 'steelblue'),
+            (axes[1], 'wm/kl_min_var',
+             'KL of Least-Active Variable', 'Min KL (nats) — 0 = collapse', 'steelblue'),
+            (axes[2], 'latent/z_active_frac',
+             'Active Latent Fraction', 'Frac of dims with std > 0.01', 'steelblue'),
+        ]:
+            vals = e_data[key]
+            valid = [(s, v) for s, v in zip(steps_e, vals) if v is not None]
+            if valid:
+                xs, ys = zip(*valid)
+                ax.plot(xs, ys, '-', color=color)
+            ax.set_xlabel('Training Step'); ax.set_ylabel(ylabel)
+            ax.set_title(title); ax.grid(True, alpha=0.3)
+        plt.suptitle('Explicit Agent — KL Utilization & Latent Health', fontsize=13)
+        plt.tight_layout()
+        path = os.path.join(output_dir, 'explicit_kl_utilization.png')
+        plt.savefig(path, dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f'  Saved: {path}', flush=True)
+
+    # -- Plot 2: Implicit planner health + horizon degradation --
+    if i_data['step']:
+        fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+        steps_i = i_data['step']
+
+        # Horizon degradation
+        valid_deg = [(s, v) for s, v in zip(steps_i, degradation) if v is not None]
+        if valid_deg:
+            xs, ys = zip(*valid_deg)
+            axes[0].plot(xs, ys, '-', color='darkorange')
+        axes[0].axhline(1.0, color='gray', linestyle='--', alpha=0.6, label='no degradation')
+        axes[0].set_xlabel('Training Step')
+        axes[0].set_ylabel('consistency_tH / consistency_t0')
+        axes[0].set_title('Horizon Degradation Ratio (> 1 = multi-step worse)')
+        axes[0].legend(); axes[0].grid(True, alpha=0.3)
+
+        # MPPI diversity
+        valid_std = [(s, v) for s, v in zip(steps_i, i_data['latent/mppi_elite_value_std'])
+                     if v is not None]
+        if valid_std:
+            xs, ys = zip(*valid_std)
+            axes[1].plot(xs, ys, '-', color='darkorange')
+        axes[1].set_xlabel('Training Step')
+        axes[1].set_ylabel('Elite value std')
+        axes[1].set_title('MPPI Planner Diversity (collapse = 0)')
+        axes[1].grid(True, alpha=0.3)
+
+        # Active latent fraction
+        valid_af = [(s, v) for s, v in zip(steps_i, i_data['latent/z_active_frac'])
+                    if v is not None]
+        if valid_af:
+            xs, ys = zip(*valid_af)
+            axes[2].plot(xs, ys, '-', color='darkorange')
+        axes[2].set_xlabel('Training Step')
+        axes[2].set_ylabel('Frac of dims with std > 0.01')
+        axes[2].set_title('Active Latent Fraction')
+        axes[2].grid(True, alpha=0.3)
+
+        plt.suptitle('Implicit Agent — Planner Health & Horizon Degradation', fontsize=13)
+        plt.tight_layout()
+        path = os.path.join(output_dir, 'implicit_planner_health.png')
+        plt.savefig(path, dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f'  Saved: {path}', flush=True)
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Analysis 8: Cross-Agent CCA Timeline (from snapshots at shared steps)
+# ---------------------------------------------------------------------------
+
+def cross_agent_cca_timeline(snapshots_e: list, snapshots_i: list,
+                              output_dir: str) -> dict:
+    """Compute CCA correlation between explicit and implicit latents at each
+    shared snapshot step. Reveals whether the two agents converge or diverge
+    in their learned representations over training.
+    """
+    if not SKLEARN_AVAILABLE:
+        return {}
+
+    # Index snapshots by step
+    snap_e = {s['step']: s['z'] for s in snapshots_e}
+    snap_i = {s['step']: s['z'] for s in snapshots_i}
+    shared_steps = sorted(set(snap_e.keys()) & set(snap_i.keys()))
+
+    if not shared_steps:
+        print('  [CCA Timeline] No shared snapshot steps found.', flush=True)
+        return {}
+
+    print(f'  [CCA Timeline] Shared steps: {shared_steps}', flush=True)
+
+    cca_steps, mean_corrs, top1_corrs = [], [], []
+    for step in shared_steps:
+        ze = snap_e[step].astype(np.float64)
+        zi = snap_i[step].astype(np.float64)
+        N = min(ze.shape[0], zi.shape[0])
+        ze, zi = ze[:N], zi[:N]
+
+        n_comp = min(10, ze.shape[1], zi.shape[1], N // 2)
+        Ze = StandardScaler().fit_transform(ze)
+        Zi = StandardScaler().fit_transform(zi)
+
+        # Reduce to at most 50 PCA dims to speed up CCA
+        pca_dim = min(50, Ze.shape[1], Zi.shape[1])
+        Ze_r = PCA(n_components=pca_dim).fit_transform(Ze)
+        Zi_r = PCA(n_components=pca_dim).fit_transform(Zi)
+
+        try:
+            cca = CCA(n_components=n_comp, max_iter=500)
+            cca.fit(Ze_r, Zi_r)
+            Xe, Xi = cca.transform(Ze_r, Zi_r)
+            corrs = [float(np.corrcoef(Xe[:, k], Xi[:, k])[0, 1]) for k in range(n_comp)]
+            mean_c = float(np.mean(corrs))
+            top1_c = float(corrs[0]) if corrs else float('nan')
+        except Exception as ex:
+            print(f'  [WARN] CCA failed at step {step}: {ex}', flush=True)
+            mean_c = float('nan')
+            top1_c = float('nan')
+
+        cca_steps.append(step)
+        mean_corrs.append(mean_c)
+        top1_corrs.append(top1_c)
+        print(f'  step={step}  mean_corr={mean_c:.4f}  top1_corr={top1_c:.4f}', flush=True)
+
+    result = {
+        'shared_steps': cca_steps,
+        'mean_canonical_corr': mean_corrs,
+        'top1_canonical_corr': top1_corrs,
+    }
+
+    if MPL_AVAILABLE and cca_steps:
+        os.makedirs(output_dir, exist_ok=True)
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(cca_steps, mean_corrs, 'o-', color='mediumseagreen', label='Mean (top-10 CCs)')
+        ax.plot(cca_steps, top1_corrs, 's--', color='darkgreen', label='Top-1 CC')
+        ax.set_xlabel('Training Step')
+        ax.set_ylabel('Canonical Correlation')
+        ax.set_title('Cross-Agent CCA Timeline\n(Explicit ↔ Implicit representation alignment)')
+        ax.legend(); ax.grid(True, alpha=0.3)
+        ax.set_ylim(0, 1.05)
+        plt.tight_layout()
+        path = os.path.join(output_dir, 'cross_agent_cca_timeline.png')
+        plt.savefig(path, dpi=150, bbox_inches='tight')
+        plt.close()
+        print(f'  Saved: {path}', flush=True)
+
+    return result
 
 
 def load_agent(agent_type: str, ckpt_path: str, env, config, device):
@@ -420,98 +839,147 @@ def main():
 
     device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
 
-    from src.train import load_config
-    exp_config = load_config('explicit', {'env': args.env, 'seed': args.seed,
-                                          'device': str(device), 'mixed_precision': False})
-    imp_config = load_config('implicit', {'env': args.env, 'seed': args.seed,
-                                          'device': str(device), 'mixed_precision': False})
+    results = {}
 
-    from src.envs.factory import make_env
-    action_repeat = getattr(exp_config, 'action_repeat', 2)
-    env_e = make_env(args.env, seed=args.seed, action_repeat=action_repeat)
-    env_i = make_env(args.env, seed=args.seed, action_repeat=action_repeat)
-
-    # ---- Auto-discover all checkpoints in both directories ----
+    # ---- Auto-discover artifacts from checkpoint paths ----
     ckpts_e = discover_checkpoints(args.explicit_ckpt)
     ckpts_i = discover_checkpoints(args.implicit_ckpt)
+    snap_dir_e = discover_snapshots(args.explicit_ckpt)
+    snap_dir_i = discover_snapshots(args.implicit_ckpt)
+    metrics_path_e = discover_metrics(args.explicit_ckpt)
+    metrics_path_i = discover_metrics(args.implicit_ckpt)
+
     print(f'Found {len(ckpts_e)} explicit checkpoints: '
           f'{[_step_from_path(c) for c in ckpts_e]}', flush=True)
     print(f'Found {len(ckpts_i)} implicit checkpoints: '
           f'{[_step_from_path(c) for c in ckpts_i]}', flush=True)
+    print(f'Explicit snapshot dir: {snap_dir_e}', flush=True)
+    print(f'Implicit snapshot dir: {snap_dir_i}', flush=True)
 
-    # ---- Load final agents for main analyses ----
-    print('\nLoading final agents...', flush=True)
-    agent_e, _ = load_agent('explicit', args.explicit_ckpt, env_e, exp_config, device)
-    agent_i, _ = load_agent('implicit', args.implicit_ckpt, env_i, imp_config, device)
+    # ---- Load snapshot NPZ files ----
+    print('\nLoading snapshots...', flush=True)
+    snapshots_e = load_snapshots(snap_dir_e)
+    snapshots_i = load_snapshots(snap_dir_i)
+    print(f'  Explicit: {len(snapshots_e)} snapshots at steps '
+          f'{[s["step"] for s in snapshots_e]}', flush=True)
+    print(f'  Implicit: {len(snapshots_i)} snapshots at steps '
+          f'{[s["step"] for s in snapshots_i]}', flush=True)
 
-    print(f'\nCollecting {args.n_samples} samples from each agent...', flush=True)
-    obs_e, lat_e, rew_e = collect_latents(agent_e, env_e, args.n_samples, device)
-    obs_i, lat_i, rew_i = collect_latents(agent_i, env_i, args.n_samples, device)
-    print(f'Explicit latent shape: {lat_e.shape}', flush=True)
-    print(f'Implicit latent shape: {lat_i.shape}', flush=True)
+    # ---- Load metrics.jsonl ----
+    print('\nLoading metrics logs...', flush=True)
+    metrics_e = load_metrics_jsonl(metrics_path_e)
+    metrics_i = load_metrics_jsonl(metrics_path_i)
+    print(f'  Explicit: {len(metrics_e)} log entries', flush=True)
+    print(f'  Implicit: {len(metrics_i)} log entries', flush=True)
 
-    results = {}
+    if not args.skip_env_collection:
+        from src.train import load_config
+        exp_config = load_config('explicit', {'env': args.env, 'seed': args.seed,
+                                              'device': str(device), 'mixed_precision': False})
+        imp_config = load_config('implicit', {'env': args.env, 'seed': args.seed,
+                                              'device': str(device), 'mixed_precision': False})
 
-    # [1] Linear Probing
-    print('\n[1] Linear Probing (R² scores)...', flush=True)
-    results['linear_probing_explicit'] = linear_probing(obs_e, lat_e, 'Explicit')
-    results['linear_probing_implicit'] = linear_probing(obs_i, lat_i, 'Implicit')
-    r2_e = results['linear_probing_explicit'].get('median_r2', float('nan'))
-    r2_i = results['linear_probing_implicit'].get('median_r2', float('nan'))
-    winner = 'Explicit' if r2_e > r2_i else 'Implicit'
-    print(f'  >> {winner} more linearly decodable  '
-          f'(Explicit={r2_e:.4f}  Implicit={r2_i:.4f} median R²)', flush=True)
+        from src.envs.factory import make_env
+        action_repeat = getattr(exp_config, 'action_repeat', 2)
+        env_e = make_env(args.env, seed=args.seed, action_repeat=action_repeat)
+        env_i = make_env(args.env, seed=args.seed, action_repeat=action_repeat)
 
-    # [2] CCA Alignment
-    print('\n[2] CCA Alignment...', flush=True)
-    N = min(len(lat_e), len(lat_i))
-    results['cca_alignment'] = cca_alignment(lat_e[:N], lat_i[:N])
+        # ---- Load final agents for main analyses ----
+        print('\nLoading final agents...', flush=True)
+        agent_e, _ = load_agent('explicit', args.explicit_ckpt, env_e, exp_config, device)
+        agent_i, _ = load_agent('implicit', args.implicit_ckpt, env_i, imp_config, device)
 
-    # [3] Effective Dimensionality
-    print('\n[3] Effective Dimensionality...', flush=True)
-    results['eff_dim_explicit'] = effective_dimensionality(lat_e, 'Explicit')
-    results['eff_dim_implicit'] = effective_dimensionality(lat_i, 'Implicit')
+        print(f'\nCollecting {args.n_samples} samples from each agent...', flush=True)
+        obs_e, lat_e, rew_e = collect_latents(agent_e, env_e, args.n_samples, device)
+        obs_i, lat_i, rew_i = collect_latents(agent_i, env_i, args.n_samples, device)
+        print(f'Explicit latent shape: {lat_e.shape}', flush=True)
+        print(f'Implicit latent shape: {lat_i.shape}', flush=True)
 
-    # [4] Reward Predictability
-    print('\n[4] Reward Predictability (z_t → r_{t+1})...', flush=True)
-    results['reward_probe_explicit'] = reward_probe(obs_e, lat_e, rew_e, 'Explicit')
-    results['reward_probe_implicit'] = reward_probe(obs_i, lat_i, rew_i, 'Implicit')
+        # [1] Linear Probing
+        print('\n[1] Linear Probing (R² scores)...', flush=True)
+        results['linear_probing_explicit'] = linear_probing(obs_e, lat_e, 'Explicit')
+        results['linear_probing_implicit'] = linear_probing(obs_i, lat_i, 'Implicit')
+        r2_e = results['linear_probing_explicit'].get('median_r2', float('nan'))
+        r2_i = results['linear_probing_implicit'].get('median_r2', float('nan'))
+        winner = 'Explicit' if r2_e > r2_i else 'Implicit'
+        print(f'  >> {winner} more linearly decodable  '
+              f'(Explicit={r2_e:.4f}  Implicit={r2_i:.4f} median R²)', flush=True)
 
-    # [5] PCA Visualization (final checkpoint)
-    print('\n[5] PCA Visualization...', flush=True)
-    pca_visualization(lat_e, rew_e, 'Explicit (RSSM)', args.output)
-    pca_visualization(lat_i, rew_i, 'Implicit (TD-MPC2)', args.output)
+        # [2] CCA Alignment
+        print('\n[2] CCA Alignment...', flush=True)
+        N = min(len(lat_e), len(lat_i))
+        results['cca_alignment'] = cca_alignment(lat_e[:N], lat_i[:N])
 
-    if MPL_AVAILABLE and SKLEARN_AVAILABLE:
-        fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-        for ax, lat, rew, name in [
-            (axes[0], lat_e, rew_e, 'Explicit (RSSM)'),
-            (axes[1], lat_i, rew_i, 'Implicit (TD-MPC2)'),
-        ]:
-            Z2 = PCA(n_components=2).fit_transform(lat)
-            sc = ax.scatter(Z2[:, 0], Z2[:, 1], c=rew, cmap='plasma', alpha=0.3, s=4)
-            plt.colorbar(sc, ax=ax, label='Reward')
-            ax.set_title(name); ax.set_xlabel('PC1'); ax.set_ylabel('PC2')
-        plt.suptitle(f'Latent Topology — {args.env}', fontsize=13)
-        plt.tight_layout()
-        plt.savefig(os.path.join(args.output, 'pca_comparison.png'), dpi=150, bbox_inches='tight')
-        plt.close()
-        print(f'  Saved: {os.path.join(args.output, "pca_comparison.png")}', flush=True)
+        # [3] Effective Dimensionality
+        print('\n[3] Effective Dimensionality...', flush=True)
+        results['eff_dim_explicit'] = effective_dimensionality(lat_e, 'Explicit')
+        results['eff_dim_implicit'] = effective_dimensionality(lat_i, 'Implicit')
 
-    # [6] Representation Evolution (uses all discovered checkpoints)
-    print(f'\n[6] Representation Evolution '
-          f'({len(ckpts_e)} explicit, {len(ckpts_i)} implicit checkpoints)...', flush=True)
-    # Free final agents first to save GPU memory during multi-ckpt loop
-    del agent_e, agent_i
-    results['representation_evolution'] = representation_evolution(
-        ckpts_e, ckpts_i, env_e, env_i,
-        exp_config, imp_config, device,
-        args.n_samples_evo, args.output,
-    )
+        # [4] Reward Predictability
+        print('\n[4] Reward Predictability (z_t → r_{t+1})...', flush=True)
+        results['reward_probe_explicit'] = reward_probe(obs_e, lat_e, rew_e, 'Explicit')
+        results['reward_probe_implicit'] = reward_probe(obs_i, lat_i, rew_i, 'Implicit')
+
+        # [5] PCA Visualization (final checkpoint)
+        print('\n[5] PCA Visualization...', flush=True)
+        pca_visualization(lat_e, rew_e, 'Explicit (RSSM)', args.output)
+        pca_visualization(lat_i, rew_i, 'Implicit (TD-MPC2)', args.output)
+
+        if MPL_AVAILABLE and SKLEARN_AVAILABLE:
+            _, axes = plt.subplots(1, 2, figsize=(14, 6))
+            for ax, lat, rew, name in [
+                (axes[0], lat_e, rew_e, 'Explicit (RSSM)'),
+                (axes[1], lat_i, rew_i, 'Implicit (TD-MPC2)'),
+            ]:
+                Z2 = PCA(n_components=2).fit_transform(lat)
+                sc = ax.scatter(Z2[:, 0], Z2[:, 1], c=rew, cmap='plasma', alpha=0.3, s=4)
+                plt.colorbar(sc, ax=ax, label='Reward')
+                ax.set_title(name); ax.set_xlabel('PC1'); ax.set_ylabel('PC2')
+            plt.suptitle(f'Latent Topology — {args.env}', fontsize=13)
+            plt.tight_layout()
+            plt.savefig(os.path.join(args.output, 'pca_comparison.png'), dpi=150,
+                        bbox_inches='tight')
+            plt.close()
+            print(f'  Saved: {os.path.join(args.output, "pca_comparison.png")}', flush=True)
+
+        # [6] Representation Evolution (uses all discovered checkpoints)
+        print(f'\n[6] Representation Evolution '
+              f'({len(ckpts_e)} explicit, {len(ckpts_i)} implicit checkpoints)...', flush=True)
+        del agent_e, agent_i  # free GPU before multi-ckpt loop
+        results['representation_evolution'] = representation_evolution(
+            ckpts_e, ckpts_i, env_e, env_i,
+            exp_config, imp_config, device,
+            args.n_samples_evo, args.output,
+        )
+        env_e.close()
+        env_i.close()
+
+    # [7] Snapshot Geometry Timeline (no agent/env needed — pure NPZ loading)
+    if snapshots_e or snapshots_i:
+        print('\n[7] Snapshot Geometry Timeline...', flush=True)
+        results['snapshot_geometry'] = snapshot_geometry_analysis(
+            snapshots_e, snapshots_i, args.output)
+    else:
+        print('\n[7] Snapshot Geometry Timeline: no snapshots found, skipping.', flush=True)
+
+    # [8] Metrics Timeline (KL utilization, horizon degradation, MPPI planner)
+    if metrics_e or metrics_i:
+        print('\n[8] Metrics Timeline...', flush=True)
+        results['metrics_timeline'] = metrics_timeline_analysis(
+            metrics_e, metrics_i, args.output)
+    else:
+        print('\n[8] Metrics Timeline: no metrics.jsonl found, skipping.', flush=True)
+
+    # [9] Cross-Agent CCA Timeline (from snapshots at shared steps)
+    if snapshots_e and snapshots_i:
+        print('\n[9] Cross-Agent CCA Timeline...', flush=True)
+        results['cross_agent_cca_timeline'] = cross_agent_cca_timeline(
+            snapshots_e, snapshots_i, args.output)
+    else:
+        print('\n[9] Cross-Agent CCA Timeline: need snapshots from both agents, skipping.',
+              flush=True)
 
     save_report(results, args.output)
-    env_e.close()
-    env_i.close()
 
 
 if __name__ == '__main__':

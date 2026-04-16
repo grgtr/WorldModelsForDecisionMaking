@@ -50,6 +50,6 @@ discount_min: 0.95
 discount_max: 0.995
 
 # ----- Training Loop -----
-batch_size: 256        # transitions per update
-update_every: 2        # gradient update every N env steps (1=every step)
+batch_size: 128        # transitions per update
+update_every: 4        # gradient update every N env steps (1=every step)
 seed_steps: 1000       # random exploration before learning starts

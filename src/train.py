@@ -116,6 +116,42 @@ def make_agent(agent_type: str, obs_dim: int, act_dim: int,
 
 
 # ---------------------------------------------------------------------------
+# Latent snapshot collection
+# ---------------------------------------------------------------------------
+
+def collect_latent_snapshot(agent, buffer, n: int, snapshot_dir: str, step: int):
+    """Sample n transitions from the buffer, encode, and save as NPZ.
+
+    Snapshots enable continuous evolution analysis (20 points over 200k steps
+    instead of 3 checkpoint-based data points).
+
+    Saved arrays:
+      obs    [n, obs_dim]   — raw observations from replay buffer
+      z      [n, latent_dim] — agent's latent encoding of those observations
+      reward [n]             — rewards from the transitions
+      action [n, act_dim]    — actions taken
+      step   scalar          — training step at collection time
+    """
+    os.makedirs(snapshot_dir, exist_ok=True)
+    try:
+        batch = buffer.sample_transitions(n, horizon=1)
+        obs = batch['obs'][:, 0]        # [n, obs_dim]
+        action = batch['action'][:, 0]  # [n, act_dim]
+        reward = batch['reward'][:, 0]  # [n]
+    except Exception:
+        return  # buffer not ready yet
+
+    z = agent.encode(obs)
+    path = os.path.join(snapshot_dir, f'snapshot_{step:07d}.npz')
+    np.savez_compressed(path, obs=obs.astype(np.float32),
+                        z=z.astype(np.float32),
+                        reward=reward.astype(np.float32),
+                        action=action.astype(np.float32),
+                        step=np.array(step))
+    print(f'[snapshot] step={step}  saved {path}')
+
+
+# ---------------------------------------------------------------------------
 # Evaluation
 # ---------------------------------------------------------------------------
 
@@ -221,6 +257,8 @@ def main():
     ckpt_manager = CheckpointManager(
         logdir, save_every=config.checkpoint_every, keep=3
     )
+    snapshot_dir = os.path.join(logdir, 'latent_snapshots')
+    snapshot_every = getattr(config, 'snapshot_every', 10000)
 
     # Resume from checkpoint if requested
     start_step = 0
@@ -325,6 +363,8 @@ def main():
                 metrics = agent.update(batch)
                 steps_since_update = 0
                 for k, v in metrics.items():
+                    if isinstance(v, float) and not np.isfinite(v):
+                        continue  # skip inf/nan — don't poison EMA accumulator
                     metrics_accum[k] = metrics_accum.get(k, 0) * 0.9 + v * 0.1
 
         elif args.agent == 'implicit':
@@ -336,6 +376,8 @@ def main():
                 batch = buffer.sample_transitions(config.batch_size, horizon)
                 metrics = agent.update(batch)
                 for k, v in metrics.items():
+                    if isinstance(v, float) and not np.isfinite(v):
+                        continue  # skip inf/nan — don't poison EMA accumulator
                     metrics_accum[k] = metrics_accum.get(k, 0) * 0.9 + v * 0.1
 
         # ------ Periodic logging ------
@@ -358,6 +400,11 @@ def main():
         if ckpt_manager.should_save(step):
             path = ckpt_manager.save(step, agent, buffer, metrics_accum)
             print(f'[ckpt] Saved checkpoint at step {step}: {path}')
+
+        # ------ Latent snapshot ------
+        if step % snapshot_every == 0 and step > 0:
+            collect_latent_snapshot(agent, buffer, n=512,
+                                    snapshot_dir=snapshot_dir, step=step)
 
     # Final evaluation + checkpoint
     eval_metrics = evaluate(agent, eval_env, n_episodes=config.eval_episodes)

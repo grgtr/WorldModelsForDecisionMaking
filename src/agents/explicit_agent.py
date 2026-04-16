@@ -421,12 +421,23 @@ class ExplicitAgent(nn.Module):
         # World model train step
         post, wm_metrics = self.world_model.train_step(data)
 
+        # Z-stats from the posterior latent (no extra forward pass needed)
+        with torch.no_grad():
+            feat = self.world_model.dynamics.get_feat(post)  # [B, T, feat_dim]
+            feat_flat = feat.reshape(-1, feat.shape[-1]).float()
+            z_std = feat_flat.std(dim=0)
+            z_stats = {
+                'latent/z_mean_norm': feat_flat.norm(dim=-1).mean().item(),
+                'latent/z_std_mean': z_std.mean().item(),
+                'latent/z_active_frac': (z_std > 0.01).float().mean().item(),
+            }
+
         # Actor-critic train step in imagination
         behavior_metrics = self.behavior.train_step(
             post, self.world_model, self.act_dim
         )
 
-        return {**wm_metrics, **behavior_metrics}
+        return {**wm_metrics, **behavior_metrics, **z_stats}
 
     # ------------------------------------------------------------------
     # Checkpointing
@@ -447,10 +458,30 @@ class ExplicitAgent(nn.Module):
     # ------------------------------------------------------------------
 
     def encode(self, obs: np.ndarray) -> np.ndarray:
-        """Encode a batch of observations to latent vectors (for analysis)."""
+        """Encode a batch of observations to the stochastic latent z (for analysis).
+
+        Returns only the stochastic posterior z_t (dyn_stoch × dyn_discrete dims),
+        NOT the full [h_t; z_t] feature. Reason: with a zeroed initial state, h_t is
+        identically 0 for every observation (the GRU receives all-zero input and
+        all-zero hidden state), making 256/320 dims constant across the batch. This
+        would produce artificially inflated dead-unit fractions and deflated R² scores.
+        The stochastic z is the part that actually varies per observation.
+
+        For sequence-aware analysis (where h_t carries real temporal context), call
+        act() sequentially and read self._state instead.
+        """
         device = next(self.parameters()).device
         obs_t = torch.tensor(obs, dtype=torch.float32, device=device)
+        B = obs_t.shape[0]
         with torch.no_grad():
             embed = self.world_model.encoder(obs_t)
-            # Return just the embedding (not full RSSM state)
-        return embed.cpu().numpy()
+            init_state = {k: v.to(device)
+                          for k, v in self.world_model.dynamics.initial(B).items()}
+            prev_action = torch.zeros(B, self.act_dim, device=device)
+            is_first = torch.ones(B, dtype=torch.bool, device=device)
+            post, _ = self.world_model.dynamics.obs_step(
+                init_state, prev_action, embed, is_first
+            )
+            # Return stochastic z only: [B, dyn_stoch * dyn_discrete]
+            z = post['stoch'].reshape(B, -1)
+        return z.cpu().numpy()

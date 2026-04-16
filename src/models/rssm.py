@@ -235,12 +235,19 @@ class RSSM(nn.Module):
             dyn_scale, rep_scale: loss weights.
 
         Returns:
-            (total_loss, kl_value, dyn_loss, rep_loss) all scalars.
+            (total_loss, kl_value, dyn_loss, rep_loss, kl_per_var)
+            kl_per_var: [stoch] tensor — mean KL per categorical variable.
         """
         kl_fn = torchd.kl_divergence
 
         post_logit = post['logit']
         prior_logit = prior['logit']
+
+        # Per-variable KL [B, T, stoch] — no Independent wrapper, keeps stoch axis
+        kl_per_var = kl_fn(
+            torchd.Categorical(logits=post_logit),
+            torchd.Categorical(logits=prior_logit),
+        ).mean(dim=[0, 1])  # → [stoch]
 
         # Build distributions (wrap in Independent to sum over stoch dim)
         post_dist = torchd.Independent(
@@ -261,7 +268,7 @@ class RSSM(nn.Module):
 
         kl_value = kl_fn(post_dist, prior_dist).mean()
         total_loss = (dyn_scale * dyn_loss + rep_scale * rep_loss).mean()
-        return total_loss, kl_value.item(), dyn_loss.mean().item(), rep_loss.mean().item()
+        return total_loss, kl_value.item(), dyn_loss.mean().item(), rep_loss.mean().item(), kl_per_var
 
 
 # Encoder: maps raw state observations to RSSM embedding
@@ -386,7 +393,7 @@ class RSSMWorldModel(nn.Module):
             )
 
             # 3. KL loss
-            kl_loss, kl_val, dyn_loss, rep_loss = self.dynamics.kl_loss(
+            kl_loss, kl_val, dyn_loss, rep_loss, kl_per_var = self.dynamics.kl_loss(
                 post, prior,
                 free=self.config.kl_free,
                 dyn_scale=self.config.dyn_scale,
@@ -415,8 +422,17 @@ class RSSMWorldModel(nn.Module):
         grad_norm = torch.nn.utils.clip_grad_norm_(
             self.parameters(), self._grad_clip
         )
+        # Encoder-specific gradient norm (measures how fast encoder is changing)
+        enc_grad_norm = sum(
+            p.grad.data.norm(2).item() ** 2
+            for p in self.encoder.parameters() if p.grad is not None
+        ) ** 0.5
         self._scaler.step(self._optimizer)
         self._scaler.update()
+
+        # KL utilisation stats: are all categorical variables being used?
+        with torch.no_grad():
+            kl_per_var_cpu = kl_per_var.detach().cpu()
 
         metrics = {
             'wm/kl_loss': kl_loss.item(),
@@ -428,6 +444,9 @@ class RSSMWorldModel(nn.Module):
             'wm/cont_loss': head_losses['cont'].item(),
             'wm/total_loss': total_loss.item(),
             'wm/grad_norm': float(grad_norm),
+            'wm/encoder_grad_norm': enc_grad_norm,
+            'wm/kl_min_var': kl_per_var_cpu.min().item(),
+            'wm/kl_active_vars': float((kl_per_var_cpu > 0.1).sum().item()),
         }
         return post, metrics
 

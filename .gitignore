@@ -7,6 +7,15 @@ tdmpc2
 __pycache__/
 seed_000/
 *.pt
+logs_old/
 logs/
 __pycache__/
 *.pyc
+analysis/
+analysis_old_v2/
+analysis__old_v2/
+analysis_adv/
+analysis_upd1404_maniskill_LiftCube-v0_seed_1/
+analysis_upd1404_maniskill_LiftCube-v0_seed_2/
+figures_t1/
+figures_t2/

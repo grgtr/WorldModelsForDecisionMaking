@@ -24,5 +24,8 @@ buffer_capacity: 200_000
 env: dmc_cartpole_swingup
 action_repeat: 2            # default for DMControl
 
+# Latent snapshot collection (for representation evolution analysis)
+snapshot_every: 10000   # save encoded latents every N env steps
+
 # Output
 logdir: logs

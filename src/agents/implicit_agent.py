@@ -75,6 +75,7 @@ class ImplicitAgent(nn.Module):
 
         # MPPI warm-start: carry previous mean to next step
         self._plan_mean = None
+        self._last_plan_stats = {}  # populated by _plan(), merged into update() return
 
         # Config shortcuts
         self.horizon = getattr(config, 'horizon', 5)
@@ -161,6 +162,14 @@ class ImplicitAgent(nn.Module):
             std = std.clamp(min_std, max_std)
 
         self._plan_mean = mean.clone()
+
+        # Store MPPI diagnostics (merged into update() return metrics)
+        self._last_plan_stats = {
+            'latent/mppi_elite_value_mean': elite_values.mean().item(),
+            'latent/mppi_elite_value_std': elite_values.std().item()
+                if elite_values.numel() > 1 else 0.0,
+            'latent/mppi_plan_std': std.mean().item(),
+        }
 
         # --- 4. Execute action ---
         # Sample from elite distribution
@@ -296,6 +305,8 @@ class ImplicitAgent(nn.Module):
             consistency_loss = torch.zeros(1, device=device)
             reward_loss = torch.zeros(1, device=device)
             value_loss = torch.zeros(1, device=device)
+            consistency_t0 = None
+            consistency_tH = None
 
             for t in range(H):
                 z_t = z[:, t]         # [B, latent]
@@ -306,7 +317,12 @@ class ImplicitAgent(nn.Module):
 
                 # Consistency: dynamics(z_t, a_t) ≈ encoder(o_{t+1})
                 z_pred = self.world_model.next_z(z_t, a_t)
-                consistency_loss += weights[t] * (z_pred - z_next_t).pow(2).mean()
+                step_consistency = (z_pred - z_next_t).pow(2).mean()
+                consistency_loss += weights[t] * step_consistency
+                if t == 0:
+                    consistency_t0 = step_consistency.detach().item()
+                if t == H - 1:
+                    consistency_tH = step_consistency.detach().item()
 
                 # Reward prediction
                 r_logits = self.world_model.reward_logits(z_t, a_t)
@@ -345,11 +361,26 @@ class ImplicitAgent(nn.Module):
             total_loss = c_coef * consistency_loss + r_coef * reward_loss + \
                          v_coef * value_loss
 
+        # Z-stats from encoded batch (before backward to keep graph clean)
+        with torch.no_grad():
+            z_flat = z_all.reshape(-1, z_all.shape[-1]).float()
+            z_std_dims = z_flat.std(dim=0)
+            z_stats = {
+                'latent/z_mean_norm': z_flat.norm(dim=-1).mean().item(),
+                'latent/z_std_mean': z_std_dims.mean().item(),
+                'latent/z_active_frac': (z_std_dims > 0.01).float().mean().item(),
+            }
+
         self._scaler.scale(total_loss).backward()
         self._scaler.unscale_(self._model_opt)
         wm_grad_norm = torch.nn.utils.clip_grad_norm_(
             list(self.world_model.parameters()), self._grad_clip
         )
+        # Encoder-specific gradient norm
+        enc_grad_norm = sum(
+            p.grad.data.norm(2).item() ** 2
+            for p in self.world_model.encoder_parameters() if p.grad is not None
+        ) ** 0.5
         self._scaler.step(self._model_opt)
         self._scaler.update()
 
@@ -396,7 +427,7 @@ class ImplicitAgent(nn.Module):
         tau = getattr(self.config, 'tau', 0.01)
         self.world_model.soft_update_target(tau)
 
-        return {
+        base_metrics = {
             'implicit/consistency_loss': consistency_loss.item(),
             'implicit/reward_loss': reward_loss.item(),
             'implicit/value_loss': value_loss.item(),
@@ -404,7 +435,11 @@ class ImplicitAgent(nn.Module):
             'implicit/pi_loss': pi_loss.item(),
             'implicit/wm_grad_norm': float(wm_grad_norm),
             'implicit/pi_grad_norm': float(pi_grad_norm),
+            'latent/encoder_grad_norm': enc_grad_norm,
+            'latent/consistency_t0': consistency_t0 if consistency_t0 is not None else 0.0,
+            'latent/consistency_tH': consistency_tH if consistency_tH is not None else 0.0,
         }
+        return {**base_metrics, **z_stats, **self._last_plan_stats}
 
     # ------------------------------------------------------------------
     # Checkpointing

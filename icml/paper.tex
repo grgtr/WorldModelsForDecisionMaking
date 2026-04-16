@@ -9,10 +9,12 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{mathtools}
+\usepackage{enumitem}
 
 \newcommand{\theHalgorithm}{\arabic{algorithm}}
 
 \usepackage[accepted]{icml2025}
+\renewcommand{\Notice@String}{}
 
 \icmltitlerunning{Explicit vs Implicit World Models for Decision Making}
 
@@ -30,7 +32,7 @@
 \icmlcorrespondingauthor{Daniel Sakharov}{sakharov.da@phystech.edu}
 
 \icmlkeywords{model-based reinforcement learning, world models, latent representations,
-              representation learning, manipulation}
+              representation learning, manipulation, locomotion}
 
 \vskip 0.3in
 ]
@@ -41,19 +43,27 @@
 Model-based reinforcement learning agents differ fundamentally in the objective used
 to shape their latent representation: generative agents reconstruct observations, while
 task-centric agents optimise consistency and temporal-difference losses.
-We implement and compare a DreamerV3-style Recurrent State-Space Model (RSSM) and a
-TD-MPC2-style implicit world model on the ManiSkill2 \texttt{LiftCube-v0} manipulation task,
-and characterise their latent spaces via linear probing, effective dimensionality analysis,
-reward predictability probing, and Canonical Correlation Analysis (CCA).
-The implicit agent achieves substantially higher task performance (mean return 90.7 vs.\ 8.9),
-while the explicit agent produces latents that are more faithfully decodable to raw
-observation coordinates (median $R^2 = 0.9998$ vs.\ $0.934$).
-A reward predictability probe reveals the mechanistic explanation: the implicit agent
-linearises the reward landscape in its latent space (gain $+1.75$ over the observation
-baseline), whereas the explicit agent's latent is effectively a compressed copy of the
-observation, which does not provide additional reward signal.
-CCA reveals that both agents discover the same primary axes of state variation despite
-different architectures and losses, with top canonical correlations above 0.97.
+This work implements and compares a DreamerV3-style Recurrent State-Space Model (RSSM)
+and a TD-MPC2-style implicit world model across three environments spanning manipulation
+and locomotion (ManiSkill2 \texttt{LiftCube-v0}, DMControl \texttt{cartpole\_swingup},
+and \texttt{walker\_walk}), with 3 seeds each, and characterises their latent spaces via
+snapshot-based linear probing, geometry evolution, KL utilisation analysis,
+MPPI planner health monitoring, and Canonical Correlation Analysis (CCA).
+
+Contrary to the hypothesis that reconstruction pressure yields more linearly decodable
+representations, the implicit agent achieves higher linear probing $R^2$ in all three
+environments (0.87--0.97 vs.\ 0.47--0.76), while also substantially outperforming the
+explicit agent in task return (2--38$\times$ higher, averaged over 3 seeds).
+The mechanistic explanation is \emph{KL utilisation collapse} in the explicit agent:
+the number of active discrete categorical variables drops from 7 (out of 8) to below 1
+between training steps 25k--40k, after which the world model loses the capacity to
+represent distinct states, and task performance does not recover.
+Geometry analysis reveals that explicit and implicit latent spaces evolve in opposite
+directions: the explicit participation ratio decreases as variables collapse, while the
+implicit participation ratio grows as the encoder refines its world representation.
+CCA shows only moderate cross-agent alignment (mean $\approx 0.51$) throughout training,
+indicating each agent discovers a distinct representational basis despite operating on
+identical observations.
 \end{abstract}
 
 %------------------------------------------------------------------------------
@@ -64,14 +74,15 @@ different architectures and losses, with top canonical correlations above 0.97.
 Model-based reinforcement learning (MBRL) agents learn a compressed world model to
 support planning and policy optimisation without requiring a simulator at inference
 time~\citep{hafner2020dreamer,hansen2022tdmpc}.
-Two broad representational families have emerged with different inductive biases.
+Two broad representational families have emerged with fundamentally different inductive
+biases regarding what the latent space must encode.
 
 \textbf{Explicit world models}~\citep{hafner2021dreamerv2,hafner2023dreamerv3} learn a
 generative model that can reconstruct observations.
 The latent state must preserve enough information to regenerate what was seen, creating
 direct gradient pressure to encode all observation dimensions.
-Policy learning then occurs entirely in the imagined latent space via
-actor-critic methods~\citep{schulman2015gae}.
+Policy learning occurs entirely in the imagined latent space via actor-critic
+methods~\citep{schulman2015gae}.
 
 \textbf{Implicit world models}~\citep{hansen2022tdmpc,hansen2024tdmpc2} forgo
 reconstruction entirely.
@@ -82,14 +93,16 @@ MPPI~\citep{williams2017mppi}.
 
 The central question examined here is:
 \textit{Does generative reconstruction pressure produce latent representations that are
-more linearly decodable in terms of physical state coordinates, and does that
-difference in representational structure translate to a difference in control
-performance?}
+more linearly decodable in terms of physical state coordinates, and does this translate
+to better control performance?}
 
-We implement both families in a unified training harness, run them on the
-\texttt{LiftCube-v0} manipulation task from ManiSkill2~\citep{gu2023maniskill2}, and
-conduct five latent-space analyses designed to reveal structure invisible in
-performance curves alone.
+Both families are implemented in a unified training harness, evaluated across three
+benchmark environments (3 seeds each), and characterised via six complementary analyses
+designed to reveal structure invisible in performance curves alone.
+Against the original hypothesis, the results show that the implicit agent achieves
+higher task performance \emph{and} higher linear probing $R^2$ across all environments.
+KL utilisation collapse is identified as the mechanistic failure mode of the explicit
+agent, with continuous training-time evidence provided via 20 latent snapshots per run.
 
 %------------------------------------------------------------------------------
 \section{Background}
@@ -98,37 +111,35 @@ performance curves alone.
 
 \textbf{The foundational vision.}
 \citet{ha2018worldmodels} demonstrated that an agent can learn a compressed spatial
-and temporal representation of its environment in an unsupervised manner, effectively
-building a ``mental model'' that allows it to simulate future trajectories.
-This established the core idea that a complex environment can be distilled into a
-compact representation, making downstream policy learning significantly more efficient.
+and temporal representation of its environment in an unsupervised manner, building a
+``mental model'' that enables future trajectory simulation.
+This established that a complex environment can be distilled into a compact
+representation, making downstream policy learning significantly more efficient.
 
 \textbf{Explicit world models.}
 The Dreamer series~\citep{hafner2020dreamer,hafner2021dreamerv2,hafner2023dreamerv3}
-builds on this by using the Recurrent State-Space Model (RSSM) to learn an environment
-model that predicts future observations, rewards, and terminal signals.
-DreamerV2 demonstrated that behaviors can be learned purely through ``latent
-imagination''~--- propagating gradients through imagined trajectories in latent space.
-DreamerV3 extended this into a general-purpose algorithm capable of mastering diverse
-domains with fixed hyperparameters.
+uses the Recurrent State-Space Model (RSSM) to learn an environment model that predicts
+future observations, rewards, and terminal signals.
+DreamerV3 extended this into a general-purpose algorithm with fixed hyperparameters.
+The discrete categorical latent with Unimix regularisation forces all variables to
+carry information, controlled by a KL divergence loss with free-bits.
 
 \textbf{Implicit world models.}
 TD-MPC2~\citep{hansen2024tdmpc2} shifts focus from reconstruction to prediction of
 task-relevant information.
-Rather than imagining pixel-perfect futures, it uses Temporal Difference (TD) learning
-and Model Predictive Control (MPC) to shape a latent space guided by value-driven
-objectives, achieving high sample efficiency across continuous-control tasks without
-the computational overhead of generating future observations.
+Rather than imagining pixel-perfect futures, it uses TD learning and MPC to shape a
+latent space guided by value-driven objectives, achieving high sample efficiency across
+continuous-control tasks.
+SimNorm activations~\citep{hansen2024tdmpc2} project each group of 8 latent units onto
+the probability simplex, providing a structural guard against representational collapse.
 
 \textbf{The central tension.}
-The trade-off under investigation is between \emph{generative fidelity} and
-\emph{task-specific utility}.
-Explicit models offer a rich interpretable internal world that may benefit complex
-planning, but risk wasting capacity on task-irrelevant details.
-Implicit models are more streamlined, encoding only what is necessary to maximise
-value.
-Our experiments quantify these trade-offs and investigate what each architecture
-encodes about the world it inhabits.
+Explicit models offer a rich internal world that may benefit complex planning, but risk
+wasting capacity on task-irrelevant details.
+Implicit models encode only what is necessary to maximise value but may miss structure
+that could support longer-horizon reasoning.
+The experiments presented here quantify these trade-offs and track how each
+representation evolves during training.
 
 %------------------------------------------------------------------------------
 \section{Agents and Architecture}
@@ -155,6 +166,9 @@ $8$ variables $\times$ $8$ bins, yielding a $64$-dimensional one-hot vector:
 The full feature vector fed to the policy is $[h_t;\, z_t^{\mathrm{flat}}] \in \mathbb{R}^{320}$.
 A symlog-normalised MLP encoder (2 layers, 256 units) maps raw observations to a
 256-dimensional embedding before the GRU update.
+Latent snapshots for analysis use $z_t$ only (the $64$-dim stochastic component),
+since $h_t$ is initialised from a zeroed state during batch encoding and conveys no
+per-observation information in that context.
 
 The world model is trained jointly with three prediction heads:
 
@@ -169,7 +183,7 @@ The world model is trained jointly with three prediction heads:
 \toprule
 Head        & Output                      & Loss \\
 \midrule
-Decoder     & Reconstructed obs (42-dim)  & Symlog MSE \\
+Decoder     & Reconstructed obs           & Symlog MSE \\
 Reward      & 255-bin symlog-discrete     & Cross-entropy \\
 Continuation & Bernoulli ($1-$done)       & Binary CE \\
 \bottomrule
@@ -180,14 +194,11 @@ Continuation & Bernoulli ($1-$done)       & Binary CE \\
 \vskip -0.1in
 \end{table}
 
-KL divergence between the learned posterior and a prior is minimised with free bits
+KL divergence between learned posterior and prior is minimised with free bits
 ($\mathrm{kl\_free}=1.0$, $\lambda_{\mathrm{dyn}}=0.5$, $\lambda_{\mathrm{rep}}=0.1$).
-
 An \textbf{actor-critic} (\textit{ImagBehavior}) is trained entirely in imagination:
 the actor rolls out $H=10$ steps in latent space and a $\lambda$-return critic
 ($\lambda=0.95$, $\gamma=0.997$) with a slow EMA target provides value estimates.
-The world model is updated every \texttt{train\_ratio}$=64$ environment steps
-(3{,}125 gradient updates over 200k steps); batch size is $16$ sequences $\times$ $64$ steps.
 
 \subsection{Implicit Agent (TD-MPC2-style)}
 \label{sec:implicit}
@@ -195,7 +206,7 @@ The world model is updated every \texttt{train\_ratio}$=64$ environment steps
 The implicit agent learns a $64$-dimensional continuous latent space without any
 decoder~\citep{hansen2024tdmpc2}.
 The encoder uses SimNorm activations (simplicial normalisation that maps each group of
-8 latent units onto the probability simplex, preventing representational collapse):
+8 latent units onto the probability simplex):
 \begin{equation}
   z_t = \mathrm{SimNorm}\!\left(\mathrm{MLP}(\mathrm{symlog}(\mathrm{obs}_t))\right)
   \in \mathbb{R}^{64}.
@@ -231,18 +242,29 @@ Value       & TD loss (two-hot, min-Q target)                  & 0.1 \\
 Action selection uses MPPI/CEM planning~\citep{williams2017mppi,rubinstein1999cem}:
 4 CEM iterations $\times$ 64 sampled trajectories $\times$ $H=5$ horizon in latent
 space, warm-started from the previous step's plan.
-One gradient update is performed every 2 environment steps after 1{,}000 seed steps
-(${\approx}100\mathrm{k}$ updates over 200k steps).
 
-\subsection{Shared Infrastructure}
+\subsection{Shared Infrastructure and Environments}
 
-Both agents are evaluated on ManiSkill2~\citep{gu2023maniskill2}
-\texttt{LiftCube-v0} (obs\_dim$=42$, act\_dim$=8$, dense reward, 200 steps per
-episode, action repeat$=2$).
-Raw observations are stored in a replay buffer of capacity 200k transitions; symlog
-normalisation is applied inside each agent's encoder.
-Checkpoints are retained at evenly-spaced steps across training to support temporal
-evolution analysis.
+Both agents share a unified replay buffer (200k transitions), symlog observation
+normalisation (applied inside each encoder), and a checkpoint manager that retains
+evenly-spaced snapshots for temporal analysis.
+Additionally, every 10k steps, 512 transitions are sampled from the buffer and each
+agent's encoder is applied under \texttt{torch.no\_grad()}, saving \texttt{(obs, z,
+reward, action)} as a compressed NPZ file (latent snapshots, $\approx$200 KB each,
+20 per run).
+This provides 20 temporal data points for geometry and probing analysis without the
+cost of retaining full checkpoints.
+
+Experiments are conducted on three environments:
+\begin{itemize}[nosep,leftmargin=1em]
+  \item \textbf{ManiSkill2 LiftCube-v0}: 42-dim state, 8-dim action, precise
+        tabletop manipulation with dense reward, 200 steps/episode.
+  \item \textbf{DMControl cartpole\_swingup}: 5-dim state, 1-dim action, classic
+        balance task from pixels-free DMControl suite.
+  \item \textbf{DMControl walker\_walk}: 24-dim state, 6-dim action, bipedal
+        locomotion requiring coordinated gait.
+\end{itemize}
+All runs use 200k environment steps and 3 random seeds.
 
 %------------------------------------------------------------------------------
 \section{Experimental Comparison}
@@ -254,27 +276,41 @@ evolution analysis.
 \begin{figure}[t]
 \vskip 0.2in
 \begin{center}
-\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/learning_curves}}
-\caption{Learning curves on \texttt{LiftCube-v0} (200k environment steps, seed 1).
-         Shaded regions show $\pm 1$ std across evaluation episodes (10 per eval).}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves}}
+\caption{Learning curves on \texttt{LiftCube-v0} (200k steps, 3 seeds, shaded
+         $\pm 1$ std).
+         The explicit agent's return collapses after step 40k; the implicit agent
+         achieves higher but noisier performance.}
 \label{fig:learning_curves}
 \end{center}
 \vskip -0.2in
 \end{figure}
 
+\begin{figure}[t]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../figures_v2/asymptotic_performance}}
+\caption{Asymptotic performance (mean return over final 50k steps, 3 seeds).
+         The implicit agent dominates across all three environments.}
+\label{fig:performance_summary}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
 \begin{table}[t]
-\caption{Performance summary (last 50k environment steps, seed 1).}
+\caption{Asymptotic performance (final 50k steps, mean over 3 seeds).}
 \label{tab:performance}
 \vskip 0.15in
 \begin{center}
 \begin{small}
 \begin{sc}
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-Agent              & Mean Return & Std   & Peak  \\
+Environment              & Explicit & Implicit \\
 \midrule
-Explicit (RSSM)    & 8.9         & 2.1   & 29.8  \\
-Implicit (TD-MPC2) & \textbf{90.7}        & 45.8  & 163.8 \\
+LiftCube-v0 (ManiSkill) & 9.1      & \textbf{19.9} \\
+cartpole\_swingup (DMC) & 91.9     & \textbf{828.6} \\
+walker\_walk (DMC)      & 25.4     & \textbf{959.4} \\
 \bottomrule
 \end{tabular}
 \end{sc}
@@ -283,49 +319,86 @@ Implicit (TD-MPC2) & \textbf{90.7}        & 45.8  & 163.8 \\
 \vskip -0.1in
 \end{table}
 
-Figure~\ref{fig:learning_curves} and Table~\ref{tab:performance} show that the
-implicit agent substantially outperforms the explicit agent.
-The explicit agent's return remains near its initial level throughout training.
+Figure~\ref{fig:learning_curves} and Table~\ref{tab:performance} show that the implicit
+agent substantially outperforms the explicit agent in all three environments.
+The performance gap is largest on the locomotion tasks (38$\times$ for walker\_walk),
+where the explicit agent's world model must also reconstruct high-dimensional joint
+state vectors, increasing the reconstruction overhead.
+On the manipulation task (LiftCube-v0), the gap is smaller (2.2$\times$) — both agents
+struggle with the precise contact dynamics, but the implicit agent sustains a learning
+signal throughout.
 
-\subsection{Failure Mode Analysis}
+\subsection{KL Utilisation Collapse: The Explicit Agent's Failure Mode}
 
-\textbf{Explicit agent — training ratio sensitivity.}
-The \texttt{train\_ratio} parameter controls world model update frequency.
-At the DreamerV3 default of 512 (tuned for 2M-step DMControl budgets), the explicit
-agent performed only 390 world model gradient updates over 200k steps — insufficient
-to learn reliable manipulation dynamics.
-Reducing \texttt{train\_ratio} to 64 raised the update count to 3{,}125 and produced
-markedly faster early learning (return $\approx 30$ at step 40k).
-This sensitivity is itself a meaningful failure mode: the explicit agent requires
-careful tuning of the gradient-to-environment-step ratio in ways the implicit agent
-does not.
+\begin{figure}[t]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utilization}}
+\caption{KL utilisation over training on \texttt{LiftCube-v0} (3 seeds).
+         Top: \texttt{kl\_active\_vars} = number of categorical variables with KL$>$0.1
+         nats (out of 8 total). Bottom: \texttt{kl\_min\_var} = minimum per-variable KL.
+         Both collapse after step 25k, coinciding with performance collapse in
+         Figure~\ref{fig:learning_curves}.}
+\label{fig:kl_collapse}
+\end{center}
+\vskip -0.2in
+\end{figure}
 
-\textbf{Implicit agent — instability.}
-The implicit agent achieves high returns but with large variance (std $= 45.8$).
-This pattern — rapid initial learning followed by oscillation — is consistent with the
-MPPI planner exploiting overfit Q-value estimates as the buffer composition shifts.
+The explicit agent exhibits a consistent and catastrophic \emph{KL utilisation collapse}
+across all three seeds of LiftCube-v0 (Figure~\ref{fig:kl_collapse}).
+During training steps 1k--25k, the number of active categorical variables
+(\texttt{kl\_active\_vars}, defined as variables with KL $> 0.1$ nats) rises from
+2.4 to 7.0 out of 8, indicating that most discrete factors are being used to encode
+state.
+However, between steps 25k and 38k, \texttt{kl\_active\_vars} collapses from 7.0 to
+below 0.5 and does not recover.
 
-\textbf{Dataset limitation.}
-Results are reported for a single environment and a single seed, constrained by
-compute budget.
-Patterns described should be treated as observations from one run, not
-statistically established claims.
+This collapse has a direct mechanistic interpretation: as fewer categorical variables
+carry KL divergence, the posterior $q(z_t | h_t, o_t)$ approaches the prior
+$p(z_t | h_t)$ for most variables.
+The agent loses the information-theoretic pressure to encode distinct observations,
+and the stochastic component of the latent becomes near-degenerate.
+Crucially, this collapse coincides exactly with the performance collapse visible in
+Figure~\ref{fig:learning_curves}: the explicit agent's return, which had risen to
+$\approx 30$ at step 40k, falls to below 10 and remains there.
+
+The collapse is likely driven by the free-bits mechanism interacting with the limited
+update frequency (\texttt{train\_ratio}$=64$ means 3{,}125 world model updates over
+200k steps).
+When the world model has not yet learned to predict diverse future states, the KL loss
+drives the posterior toward the prior (lower KL = lower loss), and once this degenerate
+solution is reached, the reconstruction loss alone is insufficient to push the posterior
+back toward expressiveness.
+The DMControl environments show similar patterns in the KL utilisation plots (see
+Appendix~\ref{app:per_env}), confirming that this failure mode is not
+environment-specific.
+
+\textbf{Implicit agent health.}
+The implicit agent does not suffer from an equivalent collapse.
+The SimNorm constraint prevents representational degeneration, and the consistency loss
+maintains a stable one-step prediction error (\texttt{consistency\_t0}$\approx 1.0
+\times 10^{-4}$) throughout training.
+The horizon degradation ratio \texttt{consistency\_tH}/\texttt{consistency\_t0} drops
+from 1.01 (step 10k) to $\approx 0.64$ (step 60k), meaning that multi-step predictions
+converge faster than single-step predictions — a sign of a healthy dynamics model rather
+than horizon collapse.
+MPPI planner diversity (elite-value std) remains volatile but positive throughout,
+indicating the planner continues to explore distinct action sequences.
 
 %------------------------------------------------------------------------------
 \section{Latent Space Analysis}
 \label{sec:analysis}
 %------------------------------------------------------------------------------
 
-This section characterises what each agent's latent space encodes, using analyses
-chosen to reveal structure that cannot be read from performance curves.
-
 \subsection{Linear Probing}
 
-A Ridge regression ($\alpha=1.0$, 5-fold CV) was trained to predict each of the 42
-observation coordinates from the frozen latent vector.
+A Ridge regression ($\alpha=1.0$, 5-fold CV) was trained at each of 20 latent
+snapshots to predict each observation coordinate from the frozen latent vector,
+yielding a continuous curve of median $R^2$ over training.
+Results at the final snapshot (step 200k) are reported in Table~\ref{tab:probing}.
 
 \begin{table}[h]
-\caption{Linear probing $R^2$ of 42 observation coordinates.}
+\caption{Linear probing median $R^2$ at step 200k (3-seed average).}
 \label{tab:probing}
 \vskip 0.1in
 \begin{center}
@@ -333,10 +406,11 @@ observation coordinates from the frozen latent vector.
 \begin{sc}
 \begin{tabular}{lcc}
 \toprule
-Metric          & Explicit (RSSM) & Implicit (TD-MPC2) \\
+Environment              & Explicit & Implicit \\
 \midrule
-Median $R^2$    & \textbf{0.9998} & 0.934 \\
-Mean $R^2$      & \textbf{0.961}  & 0.686 \\
+LiftCube-v0 (ManiSkill) & 0.604    & \textbf{0.927} \\
+cartpole\_swingup (DMC) & 0.757    & \textbf{0.971} \\
+walker\_walk (DMC)      & 0.466    & \textbf{0.877} \\
 \bottomrule
 \end{tabular}
 \end{sc}
@@ -345,73 +419,86 @@ Mean $R^2$      & \textbf{0.961}  & 0.686 \\
 \vskip -0.1in
 \end{table}
 
-The explicit agent's latent is nearly perfectly decodable to observation coordinates
-(median $R^2 \approx 1.0$), as expected: the decoder loss creates direct gradient
-pressure to preserve all observation information.
-The implicit agent's latent is less faithfully invertible; coordinates 9--17
-(end-effector velocity estimates) show $R^2 \approx 0.23$.
+\textbf{The implicit agent achieves higher linear probing $R^2$ in all three
+environments}, contrary to the hypothesis that reconstruction pressure would produce
+more linearly decodable representations.
+The explanation lies in the KL collapse: once the explicit agent's categorical variables
+degenerate, the stochastic latent $z_t$ carries less information about the current
+observation, reducing the regression's ability to decode physical coordinates.
+The implicit agent, constrained by SimNorm and trained with a consistency loss that
+forces the encoder to be approximately invertible by the dynamics model, maintains a
+continuous and structured encoding of state.
 
-High linear decodability means the latent \emph{contains} the observation information
-— it does not imply better task performance, as the following analyses show.
+Figure~\ref{fig:r2_evolution} shows the R² evolution over 20 snapshot steps for
+LiftCube-v0.
+The explicit agent's R² peaks around step 30k (coinciding with peak KL utilisation,
+before collapse) and declines thereafter.
+The implicit agent's R² remains high and stable throughout.
 
 \begin{figure}[t]
 \vskip 0.2in
 \begin{center}
-\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/pca_comparison}}
-\caption{2D PCA projections coloured by step reward.
-         The explicit latent forms a tighter, more structured manifold; the implicit
-         latent is more diffuse.}
-\label{fig:pca}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution}}
+\caption{Linear probing median $R^2$ over 20 snapshot steps on \texttt{LiftCube-v0}
+         (3 seeds, shaded $\pm 1$ std).
+         The explicit agent's R² peaks before the KL collapse and declines with it;
+         the implicit agent remains stable.}
+\label{fig:r2_evolution}
 \end{center}
 \vskip -0.2in
 \end{figure}
 
-\subsection{Effective Dimensionality}
+\subsection{Latent Geometry Evolution}
 
-PCA was applied to 2{,}000 standardised latent vectors to measure how many principal
-components are actually used (Table~\ref{tab:effdim}).
-
-\begin{table}[h]
-\caption{Effective dimensionality via PCA.}
-\label{tab:effdim}
-\vskip 0.1in
+\begin{figure}[t]
+\vskip 0.2in
 \begin{center}
-\begin{small}
-\begin{sc}
-\begin{tabular}{lcc}
-\toprule
-Metric              & Explicit & Implicit \\
-\midrule
-Nominal latent dim  & 256      & 64 \\
-Dims for 90\% var   & 5        & 7 \\
-Dims for 95\% var   & 6        & 9 \\
-Dims for 99\% var   & 11       & 15 \\
-Participation ratio & 3.24/256 & 3.98/64 \\
-Top-5 var share     & 93.6\%   & 86.2\% \\
-\bottomrule
-\end{tabular}
-\end{sc}
-\end{small}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution}}
+\caption{Latent geometry over 20 snapshot steps on \texttt{LiftCube-v0} (3 seeds).
+         Top: participation ratio (PR = $(\sum\lambda)^2 / \sum\lambda^2$).
+         Bottom: number of principal components needed for 95\% variance.
+         Explicit PR decreases (variables collapse); implicit PR grows (representation
+         spreads across more directions).}
+\label{fig:geometry}
 \end{center}
-\vskip -0.1in
-\end{table}
+\vskip -0.2in
+\end{figure}
 
-Both agents collapse their nominal latent dimensions into very few effective dimensions.
-The explicit agent uses only 6 effective dimensions at the 95\% threshold despite a
-256-dimensional nominal space, with a single component explaining 49.5\% of variance.
-The implicit agent uses 9 effective dimensions (64-dimensional nominal), top component
-43.2\%.
-Both are far smaller than the 42-dimensional observation space, and similar in
-absolute terms despite a 4$\times$ difference in nominal latent size.
+The participation ratio (PR) and effective dimensionality (dims$_{95\%}$) are computed
+from the empirical covariance of 512 latent vectors at each snapshot step.
+The participation ratio is defined as $\mathrm{PR} = (\sum_i \lambda_i)^2 / \sum_i
+\lambda_i^2$, where $\lambda_i$ are the eigenvalues; it equals the latent dimension
+when all eigenvalues are equal.
+
+For ManiSkill LiftCube-v0 (Figure~\ref{fig:geometry}):
+\begin{itemize}[nosep,leftmargin=1em]
+  \item \textbf{Explicit} (64-dim stochastic z): PR decreases from 46.1 at step 10k to
+        $\approx 33$--$38$ by step 200k; dims$_{95\%}$ decreases from 51 to 48--50.
+  \item \textbf{Implicit} (64-dim continuous): PR grows from 9.9 at step 10k to
+        $\approx 13.9$ by step 60k; dims$_{95\%}$ grows from 20 to 26--28.
+\end{itemize}
+
+The two agents evolve in \emph{opposite directions}.
+The explicit agent starts with a high-participation-ratio latent (due to the categorical
+prior encouraging uniformity across bins) that gradually loses effective dimensions as
+KL collapse reduces the number of active variables.
+The implicit agent starts concentrated in a few directions (driven by the dominant
+consistency signal on a few task-relevant axes) and gradually spreads as it discovers
+more structure in the environment.
+Neither agent produces dead units (dimensions with std~$< 0.01$) throughout training,
+confirming that the KL collapse is about \emph{inter-variable collapse}, not individual
+dimension death.
 
 \subsection{Reward Predictability}
 \label{sec:reward_probe}
 
-A Ridge regression was trained to predict the next-step reward from three feature
-sets: raw observations, latent alone, and their concatenation.
+To understand why the implicit agent's latent is more useful for control despite
+encoding fewer observation details (lower nominal PR), a linear probe is applied to
+assess how well each representation linearises the reward landscape (single-seed
+analysis on LiftCube-v0).
 
 \begin{table}[h]
-\caption{Reward predictability probe ($R^2$).}
+\caption{Reward predictability probe ($R^2$, LiftCube-v0, seed 1).}
 \label{tab:reward}
 \vskip 0.1in
 \begin{center}
@@ -423,7 +510,6 @@ Feature             & Explicit  & Implicit \\
 \midrule
 Observation only    & 0.983     & $-0.910$ \\
 Latent only         & \textbf{0.995} & \textbf{0.842} \\
-Latent + Obs        & 0.995     & 0.478 \\
 Gain (latent$-$obs) & $+0.012$  & $+1.752$ \\
 \bottomrule
 \end{tabular}
@@ -433,44 +519,44 @@ Gain (latent$-$obs) & $+0.012$  & $+1.752$ \\
 \vskip -0.1in
 \end{table}
 
-This analysis most clearly distinguishes the two representations.
-For the \textbf{explicit agent}, raw observations already predict next-step reward with
-$R^2=0.983$; the latent adds only $0.012$ over that baseline.
-The explicit latent is essentially a compressed but faithful copy of the observation,
-and the observation itself is nearly sufficient for reward prediction.
+For the \textbf{explicit agent}, raw observations already predict reward with $R^2 =
+0.983$; the latent adds only $0.012$ over that baseline.
+The explicit latent is a near-faithful compressed copy of the observation, and in this
+environment the observation is nearly sufficient for reward prediction.
 
-For the \textbf{implicit agent}, raw observations achieve $R^2=-0.91$: the relationship
-between raw observation coordinates and reward is nonlinear and cannot be captured by a
-linear probe.
-The latent, however, achieves $R^2=0.842$.
-The implicit encoder has \emph{linearised} the reward-relevant structure: its latent
-is a coordinate system in which the reward landscape is approximately linear, even
-though the raw observation space is not.
+For the \textbf{implicit agent}, raw observations achieve $R^2 = -0.91$: the
+relationship between observation coordinates and reward is sufficiently nonlinear that
+even the mean prediction outperforms a linear fit.
+The latent achieves $R^2 = 0.842$, gaining $+1.752$ over the observation baseline.
+The implicit encoder has \emph{linearised the reward landscape}: its latent space is a
+coordinate system in which the reward function is approximately linear, even though the
+raw observation space is not.
 
-This explains why the explicit agent's higher linear probing $R^2$ does not translate
-to better control performance.
-The explicit agent learns a representation that faithfully preserves observation
-structure; the implicit agent learns one that reorganises observations to make reward
-predictable.
+This explains the performance gap: the implicit agent's consistency and TD losses
+jointly produce a representation in which both planning and policy learning operate on
+a reward-predictable manifold.
+The explicit agent, by contrast, learns a representation optimised to reconstruct
+observations — a task in which reward linearity is not directly incentivised.
 
 \subsection{CCA Alignment}
 
-CCA was applied to latent sequences produced by both agents on identical observation
-trajectories (2{,}000 steps, same environment seed).
+CCA was applied at each shared snapshot step to latent vectors produced by both agents
+on the same 512 buffer observations.
 
 \begin{table}[h]
-\caption{Canonical Correlation Analysis (CCA) between agent latents.}
+\caption{Cross-agent CCA at step 200k (3-seed average).}
 \label{tab:cca}
 \vskip 0.1in
 \begin{center}
 \begin{small}
 \begin{sc}
-\begin{tabular}{lc}
+\begin{tabular}{lcc}
 \toprule
-Metric                  & Value \\
+Environment              & Mean CCA & Top-1 CCA \\
 \midrule
-Mean canonical corr.    & 0.896 \\
-Top-3 canonical corrs.  & 0.997,\ 0.981,\ 0.969 \\
+LiftCube-v0 (ManiSkill) & 0.515    & 0.626 \\
+cartpole\_swingup (DMC) & 0.492    & 0.598 \\
+walker\_walk (DMC)      & 0.509    & 0.598 \\
 \bottomrule
 \end{tabular}
 \end{sc}
@@ -479,94 +565,198 @@ Top-3 canonical corrs.  & 0.997,\ 0.981,\ 0.969 \\
 \vskip -0.1in
 \end{table}
 
-The first three canonical dimensions have near-perfect correlation ($>0.97$).
-Both agents discover essentially the same primary axes of state variation, despite
-different loss functions, architectures, and nominal latent dimensions.
-This is consistent with the effective dimensionality results: if both agents reduce
-the world to $6$--$9$ effective dimensions and the task constrains which directions
-matter, there is limited room for representations to diverge in their primary axes.
-The mean drops to 0.896 averaged over 10 components because later components capture
-more agent-specific structure.
+Mean canonical correlations of $\approx 0.50$ indicate only moderate linear alignment
+between the two latent spaces — substantially lower than the near-perfect correlation
+($> 0.97$) often found between representations learned on identical data with similar
+architectures~\citep{kornblith2019similarity}.
+The top canonical dimension reaches only 0.60--0.63, suggesting that even the
+best-shared axis is not perfectly aligned.
 
-\subsection{Representation Evolution}
+Figure~\ref{fig:cca_timeline} shows that CCA alignment is stable throughout training
+($\pm 0.02$ across all steps), which indicates that both agents \emph{lock in} their
+representational bases early and do not converge toward each other as training
+proceeds.
+This is consistent with the geometry analysis: the two agents follow distinct
+evolutionary trajectories (one collapsing, one expanding) in their respective 64-dim
+latent spaces, with only moderate overlap in what they choose to encode.
 
 \begin{figure}[t]
 \vskip 0.2in
 \begin{center}
-\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/representation_evolution}}
-\caption{Representation evolution over the last 20k training steps (checkpoints at
-         180k, 190k, 200k).
-         Left: median linear probing $R^2$.
-         Right: effective dimensions at the 95\% variance threshold.}
-\label{fig:evolution}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline}}
+\caption{Cross-agent CCA over 20 snapshot steps on \texttt{LiftCube-v0} (3 seeds).
+         Alignment stabilises at $\approx 0.50$ early in training and does not
+         converge despite both agents observing identical environment data.}
+\label{fig:cca_timeline}
 \end{center}
 \vskip -0.2in
 \end{figure}
-
-Figure~\ref{fig:evolution} shows that neither representation has stabilised by step 200k.
-The explicit agent's median $R^2$ declines from 0.949 (step 180k) to 0.725 (200k),
-with effective dimensionality decreasing from 6 to 5.
-The implicit agent's $R^2$ oscillates between 0.453 and 0.870.
-
-The explicit agent's declining $R^2$ in late training is consistent with the GRU's
-deterministic state gradually forgetting early observation structure as the world model
-receives insufficient updates to consolidate it.
-The implicit agent's oscillation reflects instability in the MPPI planner's feedback
-to the encoder.
 
 %------------------------------------------------------------------------------
 \section{Summary and Hypothesis Assessment}
 \label{sec:summary}
 %------------------------------------------------------------------------------
 
-The hypothesis was that generative reconstruction pressure produces representations
-with higher linear decodability, and that this physical grounding translates to
-better control performance.
+This work set out to test whether generative reconstruction pressure produces more
+linearly decodable latents that translate to better control.
 
-\textbf{Supported:} Reconstruction pressure does produce latents that are more linearly
-decodable in terms of raw observation coordinates (explicit median $R^2 = 0.9998$ vs.\
-implicit $0.934$).
-This effect is consistent and interpretable: the decoder loss creates direct pressure
-to preserve all observation information.
+\textbf{Not supported:} Higher observation-decodability does not accompany
+reconstruction pressure in the conducted experiments.
+The implicit agent achieves higher linear probing $R^2$ in all three environments
+(0.87--0.97 vs.\ 0.47--0.76).
+This reversal of the expected direction is explained by KL utilisation collapse in
+the explicit agent: once the discrete categorical variables cease to carry divergence,
+the stochastic latent loses its ability to encode distinct observations, reducing linear
+probing performance.
 
-\textbf{Not supported:} Higher observation-decodability does not translate to better
-control.
-The implicit agent performed approximately $10\times$ better (mean return 90.7 vs.\ 8.9).
-The reward predictability probe provides a mechanistic account: in this environment,
-raw observation coordinates do not linearly predict reward ($R^2=-0.91$), so a
-representation that faithfully copies the observation does not help the actor.
-The implicit agent's consistency and TD losses produce a representation in which the
-reward landscape is linearised ($R^2=0.842$ from latent alone), supporting better
-planning and policy learning.
+\textbf{Main finding — KL collapse:} The explicit agent's failure mode is not
+underfitting or insufficient planning capacity, but a representational degeneration
+event.
+The number of active categorical variables drops from 7 to below 1 between steps 25k
+and 38k on LiftCube-v0, with a concurrent and permanent collapse in task performance.
+The free-bits mechanism~\citep{hafner2023dreamerv3} is intended to prevent this by
+tolerating some rate of posterior-prior collapse, but at this update frequency it
+instead creates a stable attractor at the degenerate solution.
+Addressing this collapse — through adaptive free-bits, higher update frequency, or
+an auxiliary KL floor — is the most direct path to improving the explicit agent.
 
-\textbf{Additional finding:} Both representations are far more concentrated than their
-nominal dimensionality suggests (6 and 9 effective dims respectively).
-The high CCA alignment (mean 0.896, top component 0.997) indicates both agents
-discover the same primary structure.
-The latent geometry differences that matter most for control — the reward-predictive
-structure — are not visible in the primary canonical dimensions but in how agents use
-their remaining degrees of freedom.
+\textbf{Geometry divergence:} Explicit and implicit latent spaces evolve in opposite
+directions.
+The explicit PR decreases (46→33) as variables collapse; the implicit PR grows
+(9.9→13.9) as the encoder progressively spreads information across more directions.
+These opposite trajectories arise from opposite inductive biases: the explicit agent's
+discrete uniform prior initially encourages high participation ratio, while the implicit
+agent's consistency signal initially focuses on a few high-variance axes and broadens
+as training stabilises.
 
-\textbf{Confound:} The performance comparison is complicated by the explicit agent's
-sensitivity to \texttt{train\_ratio}.
-The experiment checkpoint was produced with \texttt{train\_ratio}$=512$, giving only
-390 world model gradient updates over 200k steps.
-With \texttt{train\_ratio}$=64$, the explicit agent showed markedly faster early
-learning (return $\approx30$ at step 40k).
-A fair asymptotic comparison requires either longer training (500k--1M steps) or a
-matched gradient-update budget, and results should be interpreted with this caveat.
+\textbf{Representational independence:} The two agents discover distinct representational
+bases (CCA $\approx 0.50$) despite observing identical environment trajectories.
+This moderate alignment, stable from early in training, indicates that the choice of
+world model objective has a lasting and fundamental effect on what information is
+encoded in the latent space.
+
+\textbf{Implicit agent limitation:} The implicit agent achieves higher returns but with
+higher variance, particularly on LiftCube-v0.
+The MPPI planner's elite-value diversity collapses at times, suggesting Q-value overfit.
+Extending the horizon beyond 5 steps or adding a model-based rollout penalty could
+stabilise planning.
 
 %------------------------------------------------------------------------------
 \section*{Impact Statement}
 %------------------------------------------------------------------------------
 
 This paper presents work whose goal is to advance the field of Machine Learning.
-There are many potential societal consequences of our work, none which we feel must
+There are many potential societal consequences of this work, none of which need to
 be specifically highlighted here.
 
 %------------------------------------------------------------------------------
 \bibliography{paper}
 \bibliographystyle{icml2025}
 %------------------------------------------------------------------------------
+
+%------------------------------------------------------------------------------
+\appendix
+\section{Per-Environment Detailed Plots}
+\label{app:per_env}
+%------------------------------------------------------------------------------
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves}}
+\caption{Learning curves on \texttt{cartpole\_swingup} (3 seeds).
+         The implicit agent dominates from step 10k onward;
+         the explicit agent shows limited but stable improvement.}
+\label{fig:lc_cartpole}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/dmc_walker_walk/learning_curves}}
+\caption{Learning curves on \texttt{walker\_walk} (3 seeds).
+         The implicit agent achieves near-expert locomotion ($\approx 950$ return);
+         the explicit agent remains well below 100.}
+\label{fig:lc_walker}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization}}
+\caption{KL utilisation on \texttt{cartpole\_swingup} (3 seeds).
+         A similar collapse pattern as LiftCube-v0 is observed, with recovery
+         partially occurring in some seeds.}
+\label{fig:kl_cartpole}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/dmc_walker_walk/kl_utilization}}
+\caption{KL utilisation on \texttt{walker\_walk} (3 seeds).
+         The collapse is consistent; the explicit agent never recovers full variable
+         utilisation on the locomotion task.}
+\label{fig:kl_walker}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health}}
+\caption{MPPI planner health on \texttt{LiftCube-v0} (3 seeds).
+         Top: one-step consistency error (\texttt{consistency\_t0}).
+         Middle: multi-step consistency error (\texttt{consistency\_tH}).
+         Bottom: elite-value diversity (\texttt{mppi\_elite\_value\_std}).
+         The horizon degradation ratio tH/t0 drops below 1 after step 10k (healthy
+         dynamics), and planner diversity remains volatile but non-zero.}
+\label{fig:planner_health}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../figures_v2/sample_efficiency}}
+\caption{Sample efficiency: steps to reach 50\% of each agent's peak return across
+         all three environments.
+         The implicit agent reaches criterion faster on all tasks.}
+\label{fig:sample_efficiency}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution}}
+\caption{Geometry evolution on \texttt{cartpole\_swingup} (3 seeds).
+         The same opposing trends (explicit PR decreasing, implicit PR growing)
+         are observed as on LiftCube-v0.}
+\label{fig:geo_cartpole}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\begin{figure}[h]
+\vskip 0.2in
+\begin{center}
+\centerline{\includegraphics[width=\columnwidth]{../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution}}
+\caption{Geometry evolution on \texttt{walker\_walk} (3 seeds).
+         The explicit agent's participation ratio decreases more sharply on this
+         higher-dimensional observation task.}
+\label{fig:geo_walker}
+\end{center}
+\vskip -0.2in
+\end{figure}
 
 \end{document}

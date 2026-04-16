@@ -1,0 +1,76 @@
+\begin{thebibliography}{11}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Ha \& Schmidhuber(2018)Ha and Schmidhuber]{ha2018worldmodels}
+Ha, D. and Schmidhuber, J.
+\newblock World models.
+\newblock \emph{arXiv preprint arXiv:1803.10122}, 2018.
+
+\bibitem[Hafner et~al.(2019)Hafner, Lillicrap, Fischer, Villegas, Ha, Lee, and
+  Davidson]{hafner2019rssm}
+Hafner, D., Lillicrap, T., Fischer, I., Villegas, R., Ha, D., Lee, H., and
+  Davidson, J.
+\newblock Learning latent dynamics for planning from pixels.
+\newblock In \emph{International Conference on Machine Learning}, 2019.
+
+\bibitem[Hafner et~al.(2020)Hafner, Lillicrap, Norouzi, and
+  Ba]{hafner2020dreamer}
+Hafner, D., Lillicrap, T., Norouzi, M., and Ba, J.
+\newblock Dream to control: Learning behaviors by latent imagination.
+\newblock In \emph{International Conference on Learning Representations}, 2020.
+
+\bibitem[Hafner et~al.(2021)Hafner, Lillicrap, Norouzi, and
+  Ba]{hafner2021dreamerv2}
+Hafner, D., Lillicrap, T., Norouzi, M., and Ba, J.
+\newblock Mastering {Atari} with discrete world models.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Hafner et~al.(2023)Hafner, Lillicrap, Norouzi, and
+  Ba]{hafner2023dreamerv3}
+Hafner, D., Lillicrap, T., Norouzi, M., and Ba, J.
+\newblock Mastering diverse domains through world models.
+\newblock \emph{arXiv preprint arXiv:2301.04104}, 2023.
+
+\bibitem[Hansen et~al.(2022)Hansen, Wang, and Su]{hansen2022tdmpc}
+Hansen, N., Wang, X., and Su, H.
+\newblock Temporal difference learning for model predictive control.
+\newblock In \emph{International Conference on Machine Learning}, 2022.
+
+\bibitem[Hansen et~al.(2024)Hansen, Su, and Wang]{hansen2024tdmpc2}
+Hansen, N., Su, H., and Wang, X.
+\newblock {TD-MPC2}: Scalable, robust world models for continuous control.
+\newblock In \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem[Kornblith et~al.(2019)Kornblith, Norouzi, Lee, and
+  Hinton]{kornblith2019similarity}
+Kornblith, S., Norouzi, M., Lee, H., and Hinton, G.
+\newblock Similarity of neural network representations revisited.
+\newblock In \emph{International Conference on Machine Learning}, 2019.
+
+\bibitem[Rubinstein(1999)]{rubinstein1999cem}
+Rubinstein, R.
+\newblock The cross-entropy method for combinatorial and continuous
+  optimization.
+\newblock \emph{Methodology and Computing in Applied Probability}, 1\penalty0
+  (2):\penalty0 127--190, 1999.
+
+\bibitem[Schulman et~al.(2016)Schulman, Moritz, Levine, Jordan, and
+  Abbeel]{schulman2015gae}
+Schulman, J., Moritz, P., Levine, S., Jordan, M., and Abbeel, P.
+\newblock High-dimensional continuous control using generalized advantage
+  estimation.
+\newblock In \emph{International Conference on Learning Representations}, 2016.
+
+\bibitem[Williams et~al.(2017)Williams, Wagener, Goldfain, Drews, Rehg, Boots,
+  and Theodorou]{williams2017mppi}
+Williams, G., Wagener, N., Goldfain, B., Drews, P., Rehg, J.~M., Boots, B., and
+  Theodorou, E.~A.
+\newblock Information theoretic {MPC} for model-based reinforcement learning.
+\newblock In \emph{IEEE International Conference on Robotics and Automation},
+  2017.
+
+\end{thebibliography}

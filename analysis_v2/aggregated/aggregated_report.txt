@@ -1,0 +1,27 @@
+Aggregated Analysis Report
+============================================================
+
+--- DMC Cartpole Swingup ---
+  explicit_final_return: 91.8879
+  implicit_final_return: 828.6291
+  explicit_final_r2: 0.7573
+  implicit_final_r2: 0.9710
+  final_mean_cca: 0.4922
+  final_top1_cca: 0.5978
+
+--- DMC Walker Walk ---
+  explicit_final_return: 25.4176
+  implicit_final_return: 959.4219
+  explicit_final_r2: 0.4655
+  implicit_final_r2: 0.8768
+  final_mean_cca: 0.5094
+  final_top1_cca: 0.5984
+
+--- ManiSkill LiftCube ---
+  explicit_final_return: 9.1457
+  implicit_final_return: 19.9138
+  explicit_final_r2: 0.6035
+  implicit_final_r2: 0.9274
+  final_mean_cca: 0.5145
+  final_top1_cca: 0.6261
+
