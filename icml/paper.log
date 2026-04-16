@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.4.12)  16 APR 2026 13:04
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.4.12)  16 APR 2026 14:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -447,20 +447,9 @@ Package hyperref Info: Option `colorlinks' set `true' on input line 153.
 \cv@tmpc@=\count308
 \cv@tmpc=\count309
 )
+LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 1
+9.
 
-! LaTeX Error: Missing \begin{document}.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.17 \renewcommand{\Notice@String}
-                                  {}
-You're in trouble here.  Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-LaTeX Font Info:    Trying to load font information for OT1+ptm on input line 2
-1.
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
@@ -472,36 +461,36 @@ File: l3backend-pdftex.def 2022-01-12 L3 backend support: PDF output (pdfTeX)
 (./paper.aux)
 \openout1 = `paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 21.
-LaTeX Font Info:    ... okay on input line 21.
-LaTeX Info: Redefining \microtypecontext on input line 21.
-Package microtype Info: Applying patch `item' on input line 21.
-Package microtype Info: Applying patch `toc' on input line 21.
-Package microtype Info: Applying patch `eqnum' on input line 21.
-Package microtype Info: Applying patch `footnote' on input line 21.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 19.
+LaTeX Font Info:    ... okay on input line 19.
+LaTeX Info: Redefining \microtypecontext on input line 19.
+Package microtype Info: Applying patch `item' on input line 19.
+Package microtype Info: Applying patch `toc' on input line 19.
+Package microtype Info: Applying patch `eqnum' on input line 19.
+Package microtype Info: Applying patch `footnote' on input line 19.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 21.
+LaTeX Info: Redefining \showhyphens on input line 19.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -538,7 +527,7 @@ G,.JBIG2,.JB2,.eps]
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring ON on input line 21.
+Package hyperref Info: Link coloring ON on input line 19.
 
 (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2021-04-02 v2.47 Cross-referencing by name of section
@@ -551,30 +540,25 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count317
 )
-LaTeX Info: Redefining \ref on input line 21.
-LaTeX Info: Redefining \pageref on input line 21.
-LaTeX Info: Redefining \nameref on input line 21.
+LaTeX Info: Redefining \ref on input line 19.
+LaTeX Info: Redefining \pageref on input line 19.
+LaTeX Info: Redefining \nameref on input line 19.
 
 (./paper.out) (./paper.out)
 \@outlinefile=\write3
 \openout3 = `paper.out'.
 
- [1
 
-
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
-
-]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\\' on input line 38.
+(hyperref)                removing `\\' on input line 36.
 
 \c@@affilmipt=\count318
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-cmr.cfg
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman 
 (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 38.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 36.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -583,7 +567,7 @@ File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 38.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 36.
 
 
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -592,24 +576,9 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
-
-Package hyperref Warning: Ignoring empty anchor on input line 40.
-
-LaTeX Font Info:    Trying to load font information for OML+ptm on input line 4
-0.
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/omlptm.fd
-File: omlptm.fd 
-)
-LaTeX Font Info:    Font shape `OML/ptm/m/n' in size <9> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 40.
-
-Underfull \hbox (badness 1484) in paragraph at lines 40--40
-[][][]|  $[]$\OT1/ptm/m/n/9 (+20) Moscow In-sti-tute of Physics and Tech-nol-og
-y (MIPT),
- []
-
 LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 4
-8.
+4.
+
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
@@ -618,313 +587,319 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 
-Underfull \hbox (badness 2302) in paragraph at lines 43--52
+Underfull \hbox (badness 2302) in paragraph at lines 39--48
 \OT1/ptm/m/n/10 (+20) fer fun-da-men-tally in the ob-jec-tive used to
  []
 
 
-Underfull \hbox (badness 1158) in paragraph at lines 43--52
+Underfull \hbox (badness 1158) in paragraph at lines 39--48
 \OT1/ptm/m/n/10 (+20) shape their la-tent rep-re-sen-ta-tion: gen-er-a-tive
  []
 
 
-Underfull \hbox (badness 2564) in paragraph at lines 43--52
+Underfull \hbox (badness 2564) in paragraph at lines 39--48
 \OT1/ptm/m/n/10 (+20) agents re-con-struct ob-ser-va-tions, while task-
  []
 
 
-Underfull \hbox (badness 3579) in paragraph at lines 43--52
+Underfull \hbox (badness 3579) in paragraph at lines 39--48
 \OT1/ptm/m/n/10 (+20) difference losses. This work im-ple-ments
  []
 
 
-Underfull \hbox (badness 1721) in paragraph at lines 43--52
+Underfull \hbox (badness 1721) in paragraph at lines 39--48
 \OT1/ptm/m/n/10 (+20) and com-pares a DreamerV3-style Re-cur-rent
  []
 
 
-Underfull \hbox (badness 3179) in paragraph at lines 43--52
+Underfull \hbox (badness 3179) in paragraph at lines 39--48
 \OT1/pcr/m/n/10 cartpole[]swingup\OT1/ptm/m/n/10 (+20) , and \OT1/pcr/m/n/10 wa
 lker[]walk\OT1/ptm/m/n/10 (+20) ),
  []
 
-[2
+
+Underfull \vbox (badness 1264) has occurred while \output is active []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
+
+
 
 ]
-Overfull \hbox (35.5151pt too wide) in paragraph at lines 182--193
+Overfull \hbox (35.5151pt too wide) in paragraph at lines 178--189
  [] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 215--217
+Underfull \hbox (badness 10000) in paragraph at lines 211--213
 []\OT1/ptm/m/n/10 (+20) A la-tent dy-nam-ics model pre-dicts $\OML/cmm/m/it/10 
 z[] \OT1/cmr/m/n/10 =
  []
 
 
-Underfull \hbox (badness 1845) in paragraph at lines 215--217
+Underfull \hbox (badness 1845) in paragraph at lines 211--213
 []\OT1/cmr/m/n/10 ([]([\OML/cmm/m/it/10 z[]\OT1/cmr/m/n/10 ; \OML/cmm/m/it/10 a
 []\OT1/cmr/m/n/10 ]))$\OT1/ptm/m/n/10 (+20) . A 2-ensemble Q-network
  []
 
 
-Overfull \hbox (32.91423pt too wide) in paragraph at lines 227--238
+Overfull \hbox (32.91423pt too wide) in paragraph at lines 223--234
  [] 
  []
 
-[3pdfTeX warning (ext4): destination with the same identifier (name{table.1}) h
+[2pdfTeX warning (ext4): destination with the same identifier (name{table.1}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.257 
+l.253 
       pdfTeX warning (ext4): destination with the same identifier (name{table.2
 }) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.257 
+l.253 
       ]
 LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 2
-60.
+56.
  (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 )
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves.png, id=88, 49
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves.png, id=84, 49
 5.7722pt x 351.2322pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves.png Graph
 ic file (type png)
 <use ../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/learni
-ng_curves.png  used on input line 279.
+ng_curves.png  used on input line 275.
 (pdftex.def)             Requested size: 234.8775pt x 166.39755pt.
-<../figures_v2/asymptotic_performance.png, id=90, 1067.187pt x 352.1958pt>
+<../figures_v2/asymptotic_performance.png, id=86, 1067.187pt x 352.1958pt>
 File: ../figures_v2/asymptotic_performance.png Graphic file (type png)
 <use ../figures_v2/asymptotic_performance.png>
 Package pdftex.def Info: ../figures_v2/asymptotic_performance.png  used on inpu
-t line 292.
+t line 288.
 (pdftex.def)             Requested size: 234.8775pt x 77.51555pt.
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utilization.png, id=93, 856
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utilization.png, id=89, 856
 .6404pt x 356.532pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utilization.png Graphi
 c file (type png)
 <use ../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utilization.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_uti
-lization.png  used on input line 336.
+lization.png  used on input line 332.
 (pdftex.def)             Requested size: 234.8775pt x 97.75554pt.
-
-Underfull \hbox (badness 1533) in paragraph at lines 365--375
-[]\OT1/ptm/m/n/10 (+20) The col-lapse is likely driven by the free-bits mech-
- []
-
-
-Underfull \hbox (badness 2111) in paragraph at lines 365--375
-\OT1/ptm/m/n/10 (+20) a-nism in-ter-act-ing with the lim-ited up-date fre-quenc
-y
- []
-
-[4pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) 
-has been already used, duplicate ignored
+ [3pdfTeX warning (ext4): destination with the same identifier (name{figure.1})
+ has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.375 
-      pdfTeX warning (ext4): destination with the same identifier (name{figure.
-2}) has been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.375 
+l.360 
       pdfTeX warning (ext4): destination with the same identifier (name{table.3
 }) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.375 
+l.360 
+      pdfTeX warning (ext4): destination with the same identifier (name{figure.
+2}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.360 
+      pdfTeX warning (ext4): destination with the same identifier (name{figure.
+3}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.360 
        <../analysis_v2/aggregated/maniskill_LiftCube-v0/learning_curves.png> <.
-./figures_v2/asymptotic_performance.png>]
-Underfull \hbox (badness 4518) in paragraph at lines 376--387
+./figures_v2/asymptotic_performance.png> <../analysis_v2/aggregated/maniskill_L
+iftCube-v0/kl_utilization.png>]
+Underfull \hbox (badness 1533) in paragraph at lines 361--371
+[]\OT1/ptm/m/n/10 (+20) The col-lapse is likely driven by the free-bits mech-
+ []
+
+
+Underfull \hbox (badness 2111) in paragraph at lines 361--371
+\OT1/ptm/m/n/10 (+20) a-nism in-ter-act-ing with the lim-ited up-date fre-quenc
+y
+ []
+
+
+Underfull \hbox (badness 4518) in paragraph at lines 372--383
 []\OT1/ptm/b/n/10 (+20) Implicit agent health. \OT1/ptm/m/n/10 (+20) The im-pli
 cit agent does
  []
 
 
-Underfull \hbox (badness 2359) in paragraph at lines 376--387
+Underfull \hbox (badness 2359) in paragraph at lines 372--383
 \OT1/ptm/m/n/10 (+20) not suf-fer from an equiv-a-lent col-lapse. The Sim-
  []
 
 
-Underfull \hbox (badness 1237) in paragraph at lines 376--387
+Underfull \hbox (badness 1237) in paragraph at lines 372--383
 \OT1/ptm/m/n/10 (+20) and the con-sis-tency loss main-tains a sta-ble one-step
  []
 
 
-Underfull \hbox (badness 2932) in paragraph at lines 376--387
+Underfull \hbox (badness 2932) in paragraph at lines 372--383
 \OT1/ptm/m/n/10 (+20) pre-dic-tion er-ror (\OT1/pcr/m/n/10 consistency[]t0$\OMS
 /cmsy/m/n/10 ^^Y \OT1/cmr/m/n/10 1\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 0 \OMS/cmsy
 /m/n/10 ^^B \OT1/cmr/m/n/10 10[]$\OT1/ptm/m/n/10 (+20) )
  []
 
 
-Underfull \hbox (badness 2103) in paragraph at lines 376--387
+Underfull \hbox (badness 2103) in paragraph at lines 372--383
 \OT1/ptm/m/n/10 (+20) through-out train-ing. The hori-zon degra-da-tion ra-tio
  []
 
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png, id=115, 499.
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png, id=111, 499.
 1448pt x 351.2322pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png Graphic 
 file (type png)
 <use ../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evo
-lution.png  used on input line 441.
+lution.png  used on input line 437.
 (pdftex.def)             Requested size: 234.8775pt x 165.2721pt.
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png, id=116
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png, id=112
 , 927.9468pt x 356.532pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png Gr
 aphic file (type png)
 <use ../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/geomet
-ry_evolution.png  used on input line 456.
+ry_evolution.png  used on input line 452.
 (pdftex.def)             Requested size: 234.8775pt x 90.24258pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 461--461
+Underfull \hbox (badness 10000) in paragraph at lines 457--457
 [][][]\OT1/ptm/m/n/9 (+20) Latent ge-om-e-try over 20 snap-shot steps on
  []
 
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [5pdfTeX warning (ext4): destination with the same identifier (name{figure.3})
- has been already used, duplicate ignored
+[4pdfTeX warning (ext4): destination with the same identifier (name{table.4}) h
+as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.479 \end{itemize}
-                   pdfTeX warning (ext4): destination with the same identifier 
-(name{table.4}) has been already used, duplicate ignored
+l.468 
+      pdfTeX warning (ext4): destination with the same identifier (name{figure.
+4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.479 \end{itemize}
-                   pdfTeX warning (ext4): destination with the same identifier 
-(name{figure.4}) has been already used, duplicate ignored
+l.468 
+      pdfTeX warning (ext4): destination with the same identifier (name{figure.
+5}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.479 \end{itemize}
-                    <../analysis_v2/aggregated/maniskill_LiftCube-v0/kl_utiliza
-tion.png> <../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png>]
-Overfull \hbox (4.66411pt too wide) in paragraph at lines 553--564
+l.468 
+       <../analysis_v2/aggregated/maniskill_LiftCube-v0/r2_evolution.png> <../a
+nalysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png>]
+Overfull \hbox (4.66411pt too wide) in paragraph at lines 549--560
  [] 
  []
 
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline.png, id=135, 499.
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline.png, id=131, 499.
 1448pt x 351.2322pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline.png Graphic 
 file (type png)
 <use ../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_ti
-meline.png  used on input line 586.
+meline.png  used on input line 582.
 (pdftex.def)             Requested size: 234.8775pt x 165.2721pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 589--589
+Underfull \hbox (badness 10000) in paragraph at lines 585--585
 [][][]\OT1/ptm/m/n/9 (+20) Cross-agent CCA over 20 snap-shot steps on
  []
 
-[6pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) 
-has been already used, duplicate ignored
+[5pdfTeX warning (ext4): destination with the same identifier (name{table.5}) h
+as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.611 
-      pdfTeX warning (ext4): destination with the same identifier (name{table.5
-}) has been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.611 
+l.618 
       pdfTeX warning (ext4): destination with the same identifier (name{table.6
 }) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.611 
-       <../analysis_v2/aggregated/maniskill_LiftCube-v0/geometry_evolution.png>
-]
+l.618 
+      ]
 LaTeX Info: Symbol \textrightarrow not provided by
             font family ptm in TS1 encoding.
-            Default family used instead on input line 625.
+            Default family used instead on input line 621.
 LaTeX Info: Symbol \textrightarrow not provided by
             font family ptm in TS1 encoding.
-            Default family used instead on input line 626.
+            Default family used instead on input line 622.
 
 Underfull \vbox (badness 2913) has occurred while \output is active []
 
 
-(./paper.bbl [7pdfTeX warning (ext4): destination with the same identifier (nam
+(./paper.bbl [6pdfTeX warning (ext4): destination with the same identifier (nam
 e{figure.6}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.67 
-      <../analysis_v2/aggregated/maniskill_LiftCube-v0/cca_timeline.png>])
-<../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves.png, id=161, 50
+l.76 \end{thebibliography}
+                           <../analysis_v2/aggregated/maniskill_LiftCube-v0/cca
+_timeline.png>])
+<../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves.png, id=155, 50
 2.0356pt x 351.2322pt>
 File: ../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves.png Graphi
 c file (type png)
 <use ../analysis_v2/aggregated/dmc_cartpole_swingup/learning_curves.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_cartpole_swingup/learnin
-g_curves.png  used on input line 666.
+g_curves.png  used on input line 662.
 (pdftex.def)             Requested size: 234.8775pt x 164.32349pt.
-<../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png, id=162, 508.299
+<../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png, id=156, 508.299
 pt x 351.2322pt>
 File: ../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png Graphic fil
 e (type png)
 <use ../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_walker_walk/learning_cur
-ves.png  used on input line 678.
+ves.png  used on input line 674.
 (pdftex.def)             Requested size: 234.8775pt x 162.29764pt.
-<../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png, id=163, 856
+<../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png, id=157, 856
 .6404pt x 356.532pt>
 File: ../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png Graphic
  file (type png)
 <use ../analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_cartpole_swingup/kl_util
-ization.png  used on input line 690.
+ization.png  used on input line 686.
 (pdftex.def)             Requested size: 234.8775pt x 97.75554pt.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../analysis_v2/aggregated/dmc_walker_walk/kl_utilization.png, id=164, 856.6404
+<../analysis_v2/aggregated/dmc_walker_walk/kl_utilization.png, id=158, 856.6404
 pt x 356.532pt>
 File: ../analysis_v2/aggregated/dmc_walker_walk/kl_utilization.png Graphic file
  (type png)
 <use ../analysis_v2/aggregated/dmc_walker_walk/kl_utilization.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_walker_walk/kl_utilizati
-on.png  used on input line 702.
+on.png  used on input line 698.
 (pdftex.def)             Requested size: 234.8775pt x 97.75554pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health.png, id=165, 85
+<../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health.png, id=159, 85
 7.604pt x 356.532pt>
 File: ../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health.png Graphi
 c file (type png)
 <use ../analysis_v2/aggregated/maniskill_LiftCube-v0/planner_health.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/maniskill_LiftCube-v0/planne
-r_health.png  used on input line 714.
+r_health.png  used on input line 710.
 (pdftex.def)             Requested size: 234.8775pt x 97.6413pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../figures_v2/sample_efficiency.png, id=166, 1067.187pt x 352.1958pt>
+<../figures_v2/sample_efficiency.png, id=160, 1067.187pt x 352.1958pt>
 File: ../figures_v2/sample_efficiency.png Graphic file (type png)
 <use ../figures_v2/sample_efficiency.png>
 Package pdftex.def Info: ../figures_v2/sample_efficiency.png  used on input lin
-e 729.
+e 725.
 (pdftex.def)             Requested size: 234.8775pt x 77.51555pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png, id=167,
+<../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png, id=161,
  927.9468pt x 356.532pt>
 File: ../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png Gra
 phic file (type png)
 <use ../analysis_v2/aggregated/dmc_cartpole_swingup/geometry_evolution.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_cartpole_swingup/geometr
-y_evolution.png  used on input line 741.
+y_evolution.png  used on input line 737.
 (pdftex.def)             Requested size: 234.8775pt x 90.24258pt.
 
-Underfull \hbox (badness 2173) in paragraph at lines 744--744
+Underfull \hbox (badness 2173) in paragraph at lines 740--740
 [][][]\OT1/ptm/m/n/9 (+20) Geometry evo-lu-tion on \OT1/pcr/m/n/9 cartpole[]swi
 ngup \OT1/ptm/m/n/9 (+20) (3
  []
@@ -932,62 +907,62 @@ ngup \OT1/ptm/m/n/9 (+20) (3
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-<../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png, id=168, 927.
+<../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png, id=162, 927.
 9468pt x 356.532pt>
 File: ../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png Graphic 
 file (type png)
 <use ../analysis_v2/aggregated/dmc_walker_walk/geometry_evolution.png>
 Package pdftex.def Info: ../analysis_v2/aggregated/dmc_walker_walk/geometry_evo
-lution.png  used on input line 753.
+lution.png  used on input line 749.
 (pdftex.def)             Requested size: 234.8775pt x 90.24258pt.
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-[8pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) 
+[7pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) 
 has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.762 \end{document}
+l.758 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.8}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.762 \end{document}
+l.758 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.9}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.762 \end{document}
+l.758 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.10}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.762 \end{document}
+l.758 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.11}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.762 \end{document}
+l.758 \end{document}
                      <../analysis_v2/aggregated/dmc_cartpole_swingup/learning_c
 urves.png> <../analysis_v2/aggregated/dmc_walker_walk/learning_curves.png> <../
 analysis_v2/aggregated/dmc_cartpole_swingup/kl_utilization.png> <../analysis_v2
 /aggregated/dmc_walker_walk/kl_utilization.png> <../analysis_v2/aggregated/mani
-skill_LiftCube-v0/planner_health.png>] [9pdfTeX warning (ext4): destination wit
+skill_LiftCube-v0/planner_health.png>] [8pdfTeX warning (ext4): destination wit
 h the same identifier (name{figure.12}) has been already used, duplicate ignore
 d
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.762 \end{document}
+l.758 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.13}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.762 \end{document}
+l.758 \end{document}
                     pdfTeX warning (ext4): destination with the same identifier
  (name{figure.14}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.762 \end{document}
+l.758 \end{document}
                     
 
  <../figures_v2/sample_efficiency.png> <../analysis_v2/aggregated/dmc_cartpole_
@@ -1000,11 +975,11 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 14931 strings out of 480247
- 239938 string characters out of 5896151
- 572097 words of memory out of 5000000
- 32226 multiletter control sequences out of 15000+600000
- 513891 words of font info for 290 fonts, out of 8000000 for 9000
+ 14866 strings out of 480247
+ 239066 string characters out of 5896151
+ 576660 words of memory out of 5000000
+ 32193 multiletter control sequences out of 15000+600000
+ 507808 words of font info for 268 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  60i,11n,69p,1002b,475s stack positions out of 5000i,500n,10000p,200000b,80000s
  </home/chikibriki/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/tcrm100
@@ -1021,16 +996,15 @@ cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr9.pfb
 ></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr
 /share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/
 texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy9.pfb></usr/share/texlive
-/texmf-dist/fonts/type1/public/amsfonts/cm/cmti9.pfb></usr/share/texlive/texmf-
-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/share/texlive/texmf-d
-ist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/typ
-e1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/ut
-mr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/
-share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on paper.pdf (9 pages, 1859340 bytes).
+/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/share/texlive/
+texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fo
+nts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/t
+imes/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb
+></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on paper.pdf (8 pages, 1850273 bytes).
 PDF statistics:
- 297 PDF objects out of 1000 (max. 8388607)
- 213 compressed objects within 3 object streams
- 62 named destinations out of 1000 (max. 500000)
- 70215 words of extra memory for PDF output out of 74296 (max. 10000000)
+ 288 PDF objects out of 1000 (max. 8388607)
+ 207 compressed objects within 3 object streams
+ 61 named destinations out of 1000 (max. 500000)
+ 59463 words of extra memory for PDF output out of 61914 (max. 10000000)
 
